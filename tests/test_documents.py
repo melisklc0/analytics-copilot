@@ -23,7 +23,11 @@ def test_create_and_get_document() -> None:
     created_document = create_response.json()
     assert created_document["id"]
     assert created_document["title"] == "FastAPI docs"
+    assert created_document["source_type"] == "manual"
+    assert created_document["format"] == "plain_text"
+    assert created_document["status"] == "created"
     assert created_document["metadata"]["source"] == "fastapi-docs"
+    assert created_document["created_at"] == created_document["updated_at"]
 
     get_response = client.get(f"/documents/{created_document['id']}")
 
@@ -44,8 +48,10 @@ def test_update_document() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json()["title"] == "New title"
-    assert response.json()["content"] == "Old content"
+    updated_document = response.json()
+    assert updated_document["title"] == "New title"
+    assert updated_document["content"] == "Old content"
+    assert updated_document["updated_at"] != created_document["updated_at"]
 
 
 def test_delete_document() -> None:

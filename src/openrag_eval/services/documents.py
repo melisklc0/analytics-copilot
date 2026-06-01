@@ -1,7 +1,14 @@
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from openrag_eval.schemas.document import DocumentCreate, DocumentRead, DocumentUpdate
+from openrag_eval.schemas.document import (
+    DocumentCreate,
+    DocumentFormat,
+    DocumentRead,
+    DocumentSourceType,
+    DocumentStatus,
+    DocumentUpdate,
+)
 
 
 class DocumentService:
@@ -11,12 +18,17 @@ class DocumentService:
         self._documents: dict[UUID, DocumentRead] = {}
 
     async def create_document(self, payload: DocumentCreate) -> DocumentRead:
+        now = datetime.now(UTC)
         document = DocumentRead(
             id=uuid4(),
             title=payload.title,
             content=payload.content,
+            source_type=DocumentSourceType.MANUAL,
+            format=DocumentFormat.PLAIN_TEXT,
+            status=DocumentStatus.CREATED,
             metadata=payload.metadata,
-            created_at=datetime.now(UTC),
+            created_at=now,
+            updated_at=now,
         )
         self._documents[document.id] = document
         return document
@@ -37,6 +49,7 @@ class DocumentService:
             return None
 
         update_data = payload.model_dump(exclude_unset=True)
+        update_data["updated_at"] = datetime.now(UTC)
         updated_document = document.model_copy(update=update_data)
         self._documents[document_id] = updated_document
         return updated_document
@@ -46,3 +59,13 @@ class DocumentService:
 
 
 document_service = DocumentService()
+
+# document_service şu anda in-memory singleton:
+# Bu yüzden testlerde oluşturulan dokümanlar aynı process içinde kalabilir. 
+# Mesela bir test POST /documents yapar, sonra başka bir test GET /documents 
+# çağırırsa önceki testten kalan dokümanı görebilir. 
+# Bu ileride testleri kırılgan yapabilir.
+
+# TODO
+# boş title / boş content validation testi
+# testler arası in-memory document_service state sızıyor mu kontrol

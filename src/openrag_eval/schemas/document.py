@@ -1,7 +1,30 @@
 from datetime import datetime
+from enum import StrEnum
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
+
+class DocumentStatus(StrEnum):
+    CREATED = "created"
+    CHUNKED = "chunked"
+    INDEXED = "indexed"
+    FAILED = "failed"
+
+
+class DocumentSourceType(StrEnum):
+    MANUAL = "manual"
+    FILE = "file"
+    URL = "url"
+    SYNTHETIC = "synthetic"
+
+
+class DocumentFormat(StrEnum):
+    PLAIN_TEXT = "plain_text"
+    MARKDOWN = "markdown"
+    PDF = "pdf"
+    DOCX = "docx"
+    HTML = "html"
 
 
 class DocumentMetadata(BaseModel):
@@ -21,8 +44,12 @@ class DocumentRead(BaseModel):
     id: UUID
     title: str
     content: str
+    source_type: DocumentSourceType
+    format: DocumentFormat
+    status: DocumentStatus
     metadata: DocumentMetadata
     created_at: datetime
+    updated_at: datetime
 
 
 class DocumentUpdate(BaseModel):
