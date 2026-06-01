@@ -30,6 +30,8 @@ class DocumentFormat(StrEnum):
 class DocumentMetadata(BaseModel):
     source: str | None = None
     source_url: str | None = None
+    filename: str | None = None
+    content_type: str | None = None
     language: str = "en"
     tags: list[str] = Field(default_factory=list)
 

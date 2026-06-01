@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 from openrag_eval.schemas.document import (
     DocumentCreate,
     DocumentFormat,
+    DocumentMetadata,
     DocumentRead,
     DocumentSourceType,
     DocumentStatus,
@@ -27,6 +28,29 @@ class DocumentService:
             format=DocumentFormat.PLAIN_TEXT,
             status=DocumentStatus.CREATED,
             metadata=payload.metadata,
+            created_at=now,
+            updated_at=now,
+        )
+        self._documents[document.id] = document
+        return document
+
+    async def create_file_document(
+        self,
+        *,
+        title: str,
+        content: str,
+        format: DocumentFormat,
+        metadata: DocumentMetadata,
+    ) -> DocumentRead:
+        now = datetime.now(UTC)
+        document = DocumentRead(
+            id=uuid4(),
+            title=title,
+            content=content,
+            source_type=DocumentSourceType.FILE,
+            format=format,
+            status=DocumentStatus.CREATED,
+            metadata=metadata,
             created_at=now,
             updated_at=now,
         )

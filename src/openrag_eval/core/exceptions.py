@@ -17,3 +17,23 @@ class DocumentNotFoundError(ApplicationError):
 
     def __init__(self) -> None:
         super().__init__("Document not found")
+
+
+class UnsupportedDocumentFormatError(ApplicationError):
+    """Raised when an uploaded document format is not supported."""
+
+    code = "unsupported_document_format"
+    status_code = 415
+
+    def __init__(self) -> None:
+        super().__init__("Unsupported document format")
+
+
+class DocumentTextExtractionError(ApplicationError):
+    """Raised when text cannot be extracted from an uploaded document."""
+
+    code = "document_text_extraction_failed"
+    status_code = 400
+
+    def __init__(self, message: str = "Could not extract text from document") -> None:
+        super().__init__(message)

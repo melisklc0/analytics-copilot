@@ -1,9 +1,15 @@
 from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, File, UploadFile, status
 
 from openrag_eval.core.exceptions import DocumentNotFoundError
-from openrag_eval.schemas.document import DocumentCreate, DocumentRead, DocumentUpdate
+from openrag_eval.schemas.document import (
+    DocumentCreate,
+    DocumentMetadata,
+    DocumentRead,
+    DocumentUpdate,
+)
+from openrag_eval.services.document_extractors import document_extractor_service
 from openrag_eval.services.documents import document_service
 
 
@@ -13,6 +19,27 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 @router.post("", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
 async def create_document(payload: DocumentCreate) -> DocumentRead:
     return await document_service.create_document(payload)
+
+
+@router.post("/upload", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
+async def upload_document(file: UploadFile = File(...)) -> DocumentRead:
+    data = await file.read()
+    parsed_upload = await document_extractor_service.parse_upload(
+        filename=file.filename or "",
+        data=data,
+    )
+    metadata = DocumentMetadata(
+        source="uploaded-file",
+        filename=file.filename,
+        content_type=file.content_type,
+        tags=["upload"],
+    )
+    return await document_service.create_file_document(
+        title=parsed_upload.title,
+        content=parsed_upload.content,
+        format=parsed_upload.format,
+        metadata=metadata,
+    )
 
 
 @router.get("", response_model=list[DocumentRead])
