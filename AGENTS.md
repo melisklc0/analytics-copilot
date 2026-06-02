@@ -75,6 +75,7 @@ Keep API routers thin. Put business logic in `services/`. Put external integrati
 - Keep prompts and judge rubrics in config files, not hardcoded in service code.
 - Mock external LLM/Qdrant/Langfuse/network calls in unit tests.
 - Update `.env.example` and docs when adding required config.
+- Prefer project-aware tools before terminal commands for file work.
 
 ## Boundaries
 
