@@ -1,4 +1,4 @@
-﻿import atexit
+import atexit
 import copy
 import datetime as dt
 import json
@@ -67,7 +67,7 @@ class CustomJSONFormatter(logging.Formatter):
         message = self._prepare_log_dict(record)
         return json.dumps(message, default=str)
 
-    def _prepare_log_dict(self, record: logging.LogRecord) -> dict:
+    def _prepare_log_dict(self, record: logging.LogRecord) -> dict[str, object]:
         always_fields = {
             "message": record.getMessage(),
             "timestamp": dt.datetime.fromtimestamp(

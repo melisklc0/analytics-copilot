@@ -1,4 +1,4 @@
-﻿# AGENTS.md
+# AGENTS.md
 
 You are working on **Analytics Copilot**: a natural language analytics interface over a dbt-modeled PostgreSQL data warehouse.
 
@@ -45,11 +45,12 @@ Direct:
 uv run pytest
 uv run ruff check .
 uv run ruff format --check .
+uv run mypy src/analytics_copilot/
 uv run uvicorn analytics_copilot.app:app --app-dir src --host 0.0.0.0 --port 8090 --reload
 docker compose up analytics-copilot-api
 ```
 
-CI runs on every push to `main` and every PR (`.github/workflows/ci.yml`). Three gates must pass: `ruff check`, `ruff format --check`, `pytest`. Run all three locally before committing.
+CI runs on every push to `main` and every PR (`.github/workflows/ci.yml`). Four gates must pass: `ruff check`, `ruff format --check`, `mypy src/`, `pytest`. Run all four locally before committing.
 
 ## Docker Note
 
@@ -108,7 +109,7 @@ scripts/
 - Mock LLM, PostgreSQL, Redis, Langfuse, and network calls in unit tests.
 - Update `.env.example` and docs when adding required config.
 - **Every new service, node, validator, or endpoint gets a test.** No code ships without a corresponding test file in `tests/`. Mock external dependencies; never hit real DBs or APIs in unit tests.
-- **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run pytest`. Fix all failures before committing.
+- **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run mypy src/analytics_copilot/ && uv run pytest`. Fix all failures before committing.
 
 ## Boundaries
 

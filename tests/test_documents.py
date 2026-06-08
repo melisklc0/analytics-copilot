@@ -1,4 +1,4 @@
-﻿from io import BytesIO
+from io import BytesIO
 
 from docx import Document
 from fastapi.testclient import TestClient
@@ -17,7 +17,9 @@ def _build_pdf_bytes(text: str) -> bytes:
             b"/MediaBox [0 0 300 144] /Contents 5 0 R >> endobj\n"
         ),
         b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n",
-        b"5 0 obj << /Length " + str(len(stream)).encode() + b" >> stream\n"
+        b"5 0 obj << /Length "
+        + str(len(stream)).encode()
+        + b" >> stream\n"
         + stream
         + b"endstream endobj\n",
     ]
