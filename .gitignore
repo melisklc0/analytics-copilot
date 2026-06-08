@@ -222,3 +222,5 @@ docs/
 logs/*
 !logs/.gitkeep
 .vscode/
+.claude/
+.cursor/
