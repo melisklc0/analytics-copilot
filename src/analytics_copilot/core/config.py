@@ -6,16 +6,28 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    project_name: str = "OpenRAG Eval API"
+    project_name: str = "Analytics Copilot"
     version: str = "0.1.0"
     environment: str = "dev"
     log_level: str = "INFO"
 
     core_api_port: int = 8090
 
-    openai_api_key: SecretStr | None = None
-    database_url: str | None = None
+    # PostgreSQL
+    postgres_host: str = "localhost"
+    postgres_port: int = 5433
+    postgres_db: str = "analytics_copilot"
+    postgres_user: str = "postgres"
+    postgres_password: SecretStr = SecretStr("postgres")
 
+    # Read-only role used by the SQL executor
+    postgres_ro_user: str = "analyst_ro"
+    postgres_ro_password: SecretStr = SecretStr("analyst_ro")
+
+    openai_api_key: SecretStr | None = None
+
+    # Legacy / reference — kept from OpenRAG skeleton
+    database_url: str | None = None
     qdrant_host: str = "qdrant"
     qdrant_port: int = 6333
     qdrant_grpc_port: int = 6334
