@@ -224,3 +224,7 @@ logs/*
 .vscode/
 .claude/
 .cursor/
+
+# Olist raw data (large CSVs — download via Kaggle)
+data/raw/olist-dataset/*.csv
+data/processed/
