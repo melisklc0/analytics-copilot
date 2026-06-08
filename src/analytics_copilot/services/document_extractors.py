@@ -1,4 +1,4 @@
-﻿from io import BytesIO
+from io import BytesIO
 from pathlib import Path
 
 from docx import Document as DocxDocument
@@ -43,7 +43,9 @@ class DocumentExtractorService:
 
         content = self._extract_text(document_format, data).strip()
         if not content:
-            raise DocumentTextExtractionError("Uploaded document has no extractable text")
+            raise DocumentTextExtractionError(
+                "Uploaded document has no extractable text"
+            )
 
         title = path.stem or "uploaded-document"
         return ParsedDocument(title=title, content=content, format=document_format)

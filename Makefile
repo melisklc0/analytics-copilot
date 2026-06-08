@@ -1,4 +1,4 @@
-﻿.PHONY: test run docker-build docker-up
+.PHONY: test run docker-build docker-up
 
 test:
 	uv run pytest

@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter
+from fastapi import APIRouter
 
 from analytics_copilot.schemas.common import HealthResponse
 

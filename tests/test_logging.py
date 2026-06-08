@@ -1,4 +1,4 @@
-﻿import json
+import json
 import logging
 
 from analytics_copilot.observability.logger import CustomJSONFormatter, setup_logging

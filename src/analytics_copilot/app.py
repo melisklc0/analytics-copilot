@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 
 from analytics_copilot.api.exception_handlers import register_exception_handlers
 from analytics_copilot.api.router import api_router

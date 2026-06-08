@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from analytics_copilot.schemas.document import (
@@ -85,9 +85,9 @@ class DocumentService:
 document_service = DocumentService()
 
 # document_service şu anda in-memory singleton:
-# Bu yüzden testlerde oluşturulan dokümanlar aynı process içinde kalabilir. 
-# Mesela bir test POST /documents yapar, sonra başka bir test GET /documents 
-# çağırırsa önceki testten kalan dokümanı görebilir. 
+# Bu yüzden testlerde oluşturulan dokümanlar aynı process içinde kalabilir.
+# Mesela bir test POST /documents yapar, sonra başka bir test GET /documents
+# çağırırsa önceki testten kalan dokümanı görebilir.
 # Bu ileride testleri kırılgan yapabilir.
 
 # TODO

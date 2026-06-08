@@ -1,4 +1,4 @@
-﻿from uuid import UUID
+from uuid import UUID
 
 from fastapi import APIRouter, File, UploadFile, status
 
@@ -21,7 +21,9 @@ async def create_document(payload: DocumentCreate) -> DocumentRead:
     return await document_service.create_document(payload)
 
 
-@router.post("/upload", response_model=DocumentRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/upload", response_model=DocumentRead, status_code=status.HTTP_201_CREATED
+)
 async def upload_document(file: UploadFile = File(...)) -> DocumentRead:
     data = await file.read()
     parsed_upload = await document_extractor_service.parse_upload(
