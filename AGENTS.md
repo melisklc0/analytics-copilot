@@ -43,9 +43,13 @@ Direct:
 
 ```bash
 uv run pytest
+uv run ruff check .
+uv run ruff format --check .
 uv run uvicorn analytics_copilot.app:app --app-dir src --host 0.0.0.0 --port 8090 --reload
 docker compose up analytics-copilot-api
 ```
+
+CI runs on every push to `main` and every PR (`.github/workflows/ci.yml`). Three gates must pass: `ruff check`, `ruff format --check`, `pytest`. Run all three locally before committing.
 
 ## Docker Note
 
@@ -103,6 +107,8 @@ scripts/
 - Keep prompt templates in `prompts/` YAML files — never hardcode in Python.
 - Mock LLM, PostgreSQL, Redis, Langfuse, and network calls in unit tests.
 - Update `.env.example` and docs when adding required config.
+- **Every new service, node, validator, or endpoint gets a test.** No code ships without a corresponding test file in `tests/`. Mock external dependencies; never hit real DBs or APIs in unit tests.
+- **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run pytest`. Fix all failures before committing.
 
 ## Boundaries
 
