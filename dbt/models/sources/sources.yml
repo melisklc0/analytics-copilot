@@ -1,0 +1,247 @@
+version: 2
+
+sources:
+  - name: raw
+    database: analytics_copilot
+    schema: raw
+    description: "Raw Olist Brazilian e-commerce data loaded from CSV files."
+    tables:
+      - name: customers
+        description: >
+          Customer master data with location info. Each order is assigned a unique customer_id,
+          so the same person gets a different customer_id per order. Use customer_unique_id
+          to identify repeat buyers across multiple orders.
+        columns:
+          - name: customer_id
+            description: "Unique identifier for an order's customer."
+            tests:
+              - not_null
+              - unique
+          - name: customer_unique_id
+            description: "Unique identifier for the customer across all orders."
+            tests:
+              - not_null
+          - name: customer_zip_code_prefix
+            description: "First 5 digits of customer zip code."
+            tests:
+              - relationships:
+                  to: source('raw', 'geolocation')
+                  field: geolocation_zip_code_prefix
+          - name: customer_city
+            description: "Customer city name."
+          - name: customer_state
+            description: "Customer state abbreviation (2 chars)."
+
+      - name: orders
+        description: "Core dataset. Each order links to all other entities — customers, items, payments, and reviews."
+        columns:
+          - name: order_id
+            description: "Unique order identifier."
+            tests:
+              - not_null
+              - unique
+          - name: customer_id
+            description: "Customer who placed the order."
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'customers')
+                  field: customer_id
+          - name: order_status
+            description: "Order lifecycle status (delivered, shipped, canceled, etc.)."
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [delivered, shipped, canceled, invoiced, processing, approved, unavailable, created]
+          - name: order_purchase_timestamp
+            description: "Timestamp when the order was placed."
+            tests:
+              - not_null
+          - name: order_approved_at
+            description: "Timestamp when payment was approved."
+          - name: order_delivered_carrier_date
+            description: "Timestamp when order was handed to carrier."
+          - name: order_delivered_customer_date
+            description: "Timestamp when order was delivered to customer."
+          - name: order_estimated_delivery_date
+            description: "Estimated delivery date shown to customer at purchase."
+
+      - name: order_items
+        description: >
+          Items purchased within each order — one row per item per order. To get total order value:
+          sum(price) + sum(freight_value). Each item's freight is calculated independently
+          based on its measures and weight.
+        columns:
+          - name: order_id
+            description: "Order this item belongs to."
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'orders')
+                  field: order_id
+          - name: order_item_id
+            description: "Sequential item number within the order (1-based)."
+            tests:
+              - not_null
+          - name: product_id
+            description: "Product purchased."
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'products')
+                  field: product_id
+          - name: seller_id
+            description: "Seller who sold this item."
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'sellers')
+                  field: seller_id
+          - name: shipping_limit_date
+            description: "Latest date for seller to hand off to carrier."
+          - name: price
+            description: "Item price in BRL."
+            tests:
+              - not_null
+          - name: freight_value
+            description: "Freight cost for this item in BRL."
+            tests:
+              - not_null
+
+      - name: payments
+        description: "Payment options for each order — one row per payment installment. An order can have multiple payment methods."
+        columns:
+          - name: order_id
+            description: "Order this payment belongs to."
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'orders')
+                  field: order_id
+          - name: payment_sequential
+            description: "Payment sequence number (1-based) within the order."
+            tests:
+              - not_null
+          - name: payment_type
+            description: "Payment method (credit_card, boleto, voucher, debit_card)."
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [credit_card, boleto, voucher, debit_card, not_defined]
+          - name: payment_installments
+            description: "Number of installments chosen."
+            tests:
+              - not_null
+          - name: payment_value
+            description: "Payment amount for this installment in BRL."
+            tests:
+              - not_null
+
+      - name: reviews
+        description: >
+          Customer satisfaction reviews per order. After delivery (or when estimated delivery date
+          is due), the customer receives a survey by email to rate the purchase experience
+          and leave a comment.
+        columns:
+          - name: review_id
+            description: "Unique review identifier."
+            tests:
+              - not_null
+          - name: order_id
+            description: "Order being reviewed."
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'orders')
+                  field: order_id
+          - name: review_score
+            description: "Review score from 1 (worst) to 5 (best)."
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [1, 2, 3, 4, 5]
+          - name: review_comment_title
+            description: "Short title of the review comment."
+          - name: review_comment_message
+            description: "Full review comment text."
+          - name: review_creation_date
+            description: "When the review survey was sent."
+          - name: review_answer_timestamp
+            description: "When the customer answered the survey."
+
+      - name: products
+        description: "Products sold by Olist — includes category (in Portuguese), physical dimensions, and weight. Raw column names contain typos (lenght instead of length)."
+        columns:
+          - name: product_id
+            description: "Unique product identifier."
+            tests:
+              - not_null
+              - unique
+          - name: product_category_name
+            description: "Product category in Portuguese."
+            tests:
+              - relationships:
+                  to: source('raw', 'category_translation')
+                  field: product_category_name
+          - name: product_name_lenght
+            description: "Number of characters in product name (raw typo: lenght)."
+          - name: product_description_lenght
+            description: "Number of characters in product description (raw typo: lenght)."
+          - name: product_photos_qty
+            description: "Number of product photos."
+          - name: product_weight_g
+            description: "Product weight in grams."
+          - name: product_length_cm
+            description: "Product length in centimeters."
+          - name: product_height_cm
+            description: "Product height in centimeters."
+          - name: product_width_cm
+            description: "Product width in centimeters."
+
+      - name: sellers
+        description: "Sellers that fulfilled Olist orders. Use it to find seller location and to identify which seller fulfilled each product."
+        columns:
+          - name: seller_id
+            description: "Unique seller identifier."
+            tests:
+              - not_null
+              - unique
+          - name: seller_zip_code_prefix
+            description: "First 5 digits of seller zip code."
+            tests:
+              - relationships:
+                  to: source('raw', 'geolocation')
+                  field: geolocation_zip_code_prefix
+          - name: seller_city
+            description: "Seller city name."
+          - name: seller_state
+            description: "Seller state abbreviation (2 chars)."
+
+      - name: geolocation
+        description: "Brazilian zip code prefixes with lat/lng coordinates. Use it to plot maps and find distances between sellers and customers."
+        columns:
+          - name: geolocation_zip_code_prefix
+            description: "First 5 digits of a zip code."
+            tests:
+              - not_null
+          - name: geolocation_lat
+            description: "Latitude."
+          - name: geolocation_lng
+            description: "Longitude."
+          - name: geolocation_city
+            description: "City name."
+          - name: geolocation_state
+            description: "State abbreviation (2 chars)."
+
+      - name: category_translation
+        description: "Translates product_category_name from Portuguese to English."
+        columns:
+          - name: product_category_name
+            description: "Category name in Portuguese."
+            tests:
+              - not_null
+              - unique
+          - name: product_category_name_english
+            description: "Category name in English."
+            tests:
+              - not_null
