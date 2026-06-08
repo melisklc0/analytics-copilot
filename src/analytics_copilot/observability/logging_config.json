@@ -1,4 +1,4 @@
-{
+﻿{
   "version": 1,
   "disable_existing_loggers": false,
   "formatters": {
@@ -10,7 +10,7 @@
       "datefmt": "%Y-%m-%dT%H:%M:%S%z"
     },
     "json": {
-      "()": "openrag_eval.observability.logger.CustomJSONFormatter",
+      "()": "analytics_copilot.observability.logger.CustomJSONFormatter",
       "fmt_keys": {
         "level": "levelname",
         "message": "message",
@@ -50,7 +50,7 @@
   },
   "filters": {
     "no_errors": {
-      "()": "openrag_eval.observability.logger.NonErrorFilter"
+      "()": "analytics_copilot.observability.logger.NonErrorFilter"
     }
   },
   "handlers": {
@@ -70,7 +70,7 @@
       "class": "logging.handlers.RotatingFileHandler",
       "level": "DEBUG",
       "formatter": "json",
-      "filename": "logs/openrag_eval.jsonl",
+      "filename": "logs/analytics_copilot.jsonl",
       "maxBytes": 5242880,
       "backupCount": 3,
       "encoding": "utf-8"
@@ -78,13 +78,13 @@
     "file_log": {
       "class": "logging.handlers.RotatingFileHandler",
       "formatter": "detailed",
-      "filename": "logs/openrag_eval.log",
+      "filename": "logs/analytics_copilot.log",
       "maxBytes": 5242880,
       "backupCount": 3,
       "encoding": "utf-8"
     },
     "queue_handler": {
-      "class": "openrag_eval.observability.logger.CustomQueueHandler",
+      "class": "analytics_copilot.observability.logger.CustomQueueHandler",
       "handlers": [
         "stdout",
         "stderr",

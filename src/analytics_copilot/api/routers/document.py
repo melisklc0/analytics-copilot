@@ -1,16 +1,16 @@
-from uuid import UUID
+﻿from uuid import UUID
 
 from fastapi import APIRouter, File, UploadFile, status
 
-from openrag_eval.core.exceptions import DocumentNotFoundError
-from openrag_eval.schemas.document import (
+from analytics_copilot.core.exceptions import DocumentNotFoundError
+from analytics_copilot.schemas.document import (
     DocumentCreate,
     DocumentMetadata,
     DocumentRead,
     DocumentUpdate,
 )
-from openrag_eval.services.document_extractors import document_extractor_service
-from openrag_eval.services.documents import document_service
+from analytics_copilot.services.document_extractors import document_extractor_service
+from analytics_copilot.services.documents import document_service
 
 
 router = APIRouter(prefix="/documents", tags=["documents"])

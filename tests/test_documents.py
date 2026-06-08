@@ -1,9 +1,9 @@
-from io import BytesIO
+﻿from io import BytesIO
 
 from docx import Document
 from fastapi.testclient import TestClient
 
-from openrag_eval.app import app
+from analytics_copilot.app import app
 
 
 def _build_pdf_bytes(text: str) -> bytes:

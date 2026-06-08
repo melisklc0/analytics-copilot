@@ -1,7 +1,7 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from openrag_eval.schemas.document import (
+from analytics_copilot.schemas.document import (
     DocumentCreate,
     DocumentFormat,
     DocumentMetadata,

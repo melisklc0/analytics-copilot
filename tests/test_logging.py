@@ -1,7 +1,7 @@
-import json
+﻿import json
 import logging
 
-from openrag_eval.observability.logger import CustomJSONFormatter, setup_logging
+from analytics_copilot.observability.logger import CustomJSONFormatter, setup_logging
 
 
 def test_setup_logging_runs_without_error() -> None:

@@ -1,15 +1,15 @@
-from io import BytesIO
+﻿from io import BytesIO
 from pathlib import Path
 
 from docx import Document as DocxDocument
 from markdown_it import MarkdownIt
 from pypdf import PdfReader
 
-from openrag_eval.core.exceptions import (
+from analytics_copilot.core.exceptions import (
     DocumentTextExtractionError,
     UnsupportedDocumentFormatError,
 )
-from openrag_eval.schemas.document import DocumentFormat
+from analytics_copilot.schemas.document import DocumentFormat
 
 
 class ParsedDocument:

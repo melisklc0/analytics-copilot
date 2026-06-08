@@ -1,7 +1,7 @@
-[project]
-name = "openrag-eval-platform"
+﻿[project]
+name = "analytics-copilot"
 version = "0.1.0"
-description = "Production-minded RAG evaluation and observability platform."
+description = "Natural language analytics interface for dbt-modeled PostgreSQL data warehouses. LangGraph workflow, self-healing SQL validation, read-only query enforcement."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
