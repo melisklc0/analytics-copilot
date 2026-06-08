@@ -1,6 +1,6 @@
-from fastapi import APIRouter
+﻿from fastapi import APIRouter
 
-from openrag_eval.api.routers import document, health
+from analytics_copilot.api.routers import document, health
 
 
 api_router = APIRouter()

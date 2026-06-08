@@ -1,4 +1,4 @@
-import atexit
+﻿import atexit
 import copy
 import datetime as dt
 import json
@@ -8,7 +8,7 @@ import logging.handlers
 import pathlib
 from typing import override
 
-from openrag_eval.core.config import get_settings
+from analytics_copilot.core.config import get_settings
 
 
 class QueueHandlerInit:

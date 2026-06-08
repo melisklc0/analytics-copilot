@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Request
+﻿from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from openrag_eval.core.exceptions import ApplicationError
-from openrag_eval.schemas.common import ErrorResponse
+from analytics_copilot.core.exceptions import ApplicationError
+from analytics_copilot.schemas.common import ErrorResponse
 
 
 def register_exception_handlers(app: FastAPI) -> None:

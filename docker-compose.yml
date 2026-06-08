@@ -1,6 +1,6 @@
-include:
+﻿include:
   - path: infra/api/docker-compose.yml
 
 networks:
-  openrag-eval-network:
-    name: openrag-eval-network
+  analytics-copilot-network:
+    name: analytics-copilot-network

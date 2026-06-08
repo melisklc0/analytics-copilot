@@ -1,6 +1,6 @@
-from fastapi.testclient import TestClient
+﻿from fastapi.testclient import TestClient
 
-from openrag_eval.app import app
+from analytics_copilot.app import app
 
 
 def test_health_endpoint_returns_ok() -> None:
@@ -11,5 +11,5 @@ def test_health_endpoint_returns_ok() -> None:
     assert response.status_code == 200
     assert response.json() == {
         "status": "ok",
-        "service": "openrag-eval-api",
+        "service": "analytics-copilot-api",
     }

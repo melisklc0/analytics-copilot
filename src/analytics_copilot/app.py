@@ -1,9 +1,9 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 
-from openrag_eval.api.exception_handlers import register_exception_handlers
-from openrag_eval.api.router import api_router
-from openrag_eval.core.config import get_settings
-from openrag_eval.observability.logger import setup_logging
+from analytics_copilot.api.exception_handlers import register_exception_handlers
+from analytics_copilot.api.router import api_router
+from analytics_copilot.core.config import get_settings
+from analytics_copilot.observability.logger import setup_logging
 
 
 def create_app() -> FastAPI:

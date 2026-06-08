@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+﻿# syntax=docker/dockerfile:1.7
 
 # ==========================================
 # Builder Stage
@@ -53,4 +53,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD /app/.venv/bin/python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=3)" || exit 1
 
 # Run with the venv interpreter explicitly to avoid PATH/module-resolution surprises.
-CMD ["/app/.venv/bin/python", "-m", "uvicorn", "openrag_eval.app:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8090"]
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "analytics_copilot.app:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8090"]

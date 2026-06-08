@@ -1,9 +1,9 @@
-services:
-  openrag-eval-api:
+﻿services:
+  analytics-copilot-api:
     build:
       context: ../..
       dockerfile: infra/api/Dockerfile
-    container_name: openrag_eval_api
+    container_name: analytics_copilot_api
     # Read environment variables from the root .env file
     env_file:
       - path: ../../.env
@@ -33,8 +33,8 @@ services:
       start_period: 10s
     restart: unless-stopped
     networks:
-      - openrag-eval-network
+      - analytics-copilot-network
 
 networks:
-  openrag-eval-network:
-    name: openrag-eval-network
+  analytics-copilot-network:
+    name: analytics-copilot-network
