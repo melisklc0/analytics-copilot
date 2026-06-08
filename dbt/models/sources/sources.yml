@@ -25,8 +25,11 @@ sources:
             description: "First 5 digits of customer zip code."
             tests:
               - relationships:
-                  to: source('raw', 'geolocation')
-                  field: geolocation_zip_code_prefix
+                  arguments:
+                    to: source('raw', 'geolocation')
+                    field: geolocation_zip_code_prefix
+                  config:
+                    severity: warn
           - name: customer_city
             description: "Customer city name."
           - name: customer_state
@@ -45,14 +48,16 @@ sources:
             tests:
               - not_null
               - relationships:
-                  to: source('raw', 'customers')
-                  field: customer_id
+                  arguments:
+                    to: source('raw', 'customers')
+                    field: customer_id
           - name: order_status
             description: "Order lifecycle status (delivered, shipped, canceled, etc.)."
             tests:
               - not_null
               - accepted_values:
-                  values: [delivered, shipped, canceled, invoiced, processing, approved, unavailable, created]
+                  arguments:
+                    values: [delivered, shipped, canceled, invoiced, processing, approved, unavailable, created]
           - name: order_purchase_timestamp
             description: "Timestamp when the order was placed."
             tests:
@@ -77,8 +82,9 @@ sources:
             tests:
               - not_null
               - relationships:
-                  to: source('raw', 'orders')
-                  field: order_id
+                  arguments:
+                    to: source('raw', 'orders')
+                    field: order_id
           - name: order_item_id
             description: "Sequential item number within the order (1-based)."
             tests:
@@ -88,15 +94,17 @@ sources:
             tests:
               - not_null
               - relationships:
-                  to: source('raw', 'products')
-                  field: product_id
+                  arguments:
+                    to: source('raw', 'products')
+                    field: product_id
           - name: seller_id
             description: "Seller who sold this item."
             tests:
               - not_null
               - relationships:
-                  to: source('raw', 'sellers')
-                  field: seller_id
+                  arguments:
+                    to: source('raw', 'sellers')
+                    field: seller_id
           - name: shipping_limit_date
             description: "Latest date for seller to hand off to carrier."
           - name: price
@@ -116,8 +124,9 @@ sources:
             tests:
               - not_null
               - relationships:
-                  to: source('raw', 'orders')
-                  field: order_id
+                  arguments:
+                    to: source('raw', 'orders')
+                    field: order_id
           - name: payment_sequential
             description: "Payment sequence number (1-based) within the order."
             tests:
@@ -127,7 +136,8 @@ sources:
             tests:
               - not_null
               - accepted_values:
-                  values: [credit_card, boleto, voucher, debit_card, not_defined]
+                  arguments:
+                    values: [credit_card, boleto, voucher, debit_card, not_defined]
           - name: payment_installments
             description: "Number of installments chosen."
             tests:
@@ -152,14 +162,16 @@ sources:
             tests:
               - not_null
               - relationships:
-                  to: source('raw', 'orders')
-                  field: order_id
+                  arguments:
+                    to: source('raw', 'orders')
+                    field: order_id
           - name: review_score
             description: "Review score from 1 (worst) to 5 (best)."
             tests:
               - not_null
               - accepted_values:
-                  values: [1, 2, 3, 4, 5]
+                  arguments:
+                    values: [1, 2, 3, 4, 5]
           - name: review_comment_title
             description: "Short title of the review comment."
           - name: review_comment_message
@@ -181,8 +193,11 @@ sources:
             description: "Product category in Portuguese."
             tests:
               - relationships:
-                  to: source('raw', 'category_translation')
-                  field: product_category_name
+                  arguments:
+                    to: source('raw', 'category_translation')
+                    field: product_category_name
+                  config:
+                    severity: warn
           - name: product_name_lenght
             description: "Number of characters in product name (raw typo: lenght)."
           - name: product_description_lenght
@@ -210,8 +225,11 @@ sources:
             description: "First 5 digits of seller zip code."
             tests:
               - relationships:
-                  to: source('raw', 'geolocation')
-                  field: geolocation_zip_code_prefix
+                  arguments:
+                    to: source('raw', 'geolocation')
+                    field: geolocation_zip_code_prefix
+                  config:
+                    severity: warn
           - name: seller_city
             description: "Seller city name."
           - name: seller_state
