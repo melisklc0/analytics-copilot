@@ -2,8 +2,13 @@ name: analytics_copilot
 version: "1.0.0"
 config-version: 2
 
+# Require dbt version for compatibility
+require-dbt-version: [">=1.9.0", "<2.0.0"]
+
+# Profile configuration
 profile: analytics_copilot
 
+# Project paths
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -11,19 +16,41 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
+# Documentation paths
+docs-paths: ["docs"]
+
 target-path: "target"
+
+# Clean targets
 clean-targets:
   - "target"
   - "dbt_packages"
+  - "logs"
 
+# Model configurations
 models:
   analytics_copilot:
+    # Default materialization
+    +materialized: view
+
+    # Staging layer - source-aligned, light transformations
     staging:
       +materialized: view
       +schema: staging
+      +tags: ["staging"]
+
+    # Intermediate layer - business logic, purpose-built
     intermediate:
       +materialized: view
       +schema: intermediate
+      +tags: ["intermediate"]
+
+    # Marts layer - business-ready datasets
     marts:
       +materialized: table
       +schema: marts
+      +tags: ["marts"]
+
+# Project variables
+vars:
+  'dbt_date:time_zone': 'UTC'

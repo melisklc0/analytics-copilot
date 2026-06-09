@@ -8,5 +8,5 @@ analytics_copilot:
       dbname: "{{ env_var('POSTGRES_DB', 'analytics_copilot') }}"
       user: "{{ env_var('POSTGRES_USER', 'postgres') }}"
       password: "{{ env_var('POSTGRES_PASSWORD', 'postgres') }}"
-      schema: public
+      schema: main
       threads: 4

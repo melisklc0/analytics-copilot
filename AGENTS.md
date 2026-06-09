@@ -28,17 +28,6 @@ Target vision and roadmap: `docs/VIZYON.md`.
 
 ## Commands
 
-```bash
-uv sync
-make seed         # load Olist raw data into PostgreSQL
-make dbt-run      # dbt run
-make dbt-test     # dbt test
-make dbt-docs     # dbt docs generate
-make run          # uvicorn dev server
-make test         # pytest
-make docker-up    # full stack
-```
-
 Direct:
 
 ```bash
@@ -100,6 +89,7 @@ scripts/
 
 ## Rules
 
+- Use tools before terminal commands.
 - Search before adding new files, schemas, services, config keys, prompts, or endpoints.
 - Follow existing repo structure.
 - Use type hints on public code.
@@ -109,7 +99,7 @@ scripts/
 - Mock LLM, PostgreSQL, Redis, Langfuse, and network calls in unit tests.
 - Update `.env.example` and docs when adding required config.
 - **Every new service, node, validator, or endpoint gets a test.** No code ships without a corresponding test file in `tests/`. Mock external dependencies; never hit real DBs or APIs in unit tests.
-- **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run mypy src/analytics_copilot/ && uv run pytest`. Fix all failures before committing.
+- **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run mypy src/analytics_copilot/ && uv run pytest`.
 
 ## Boundaries
 
@@ -127,7 +117,6 @@ Never:
 - Remove or loosen tests to hide failures.
 - Use private company data as sample data.
 - Hardcode prompts in Python.
-- Let the AI layer run aggregation queries — that belongs in dbt.
 - Connect to PostgreSQL with a role that has write access.
 
 ## Commits
