@@ -1,5 +1,5 @@
 services:
-  postgres:
+  analytics-copilot-db:
     image: postgres:17-alpine
     container_name: analytics_copilot_postgres
     environment:
@@ -9,7 +9,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - analytics_copilot_postgres_data:/var/lib/postgresql/data
       - ../../infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - analytics-copilot-network
@@ -18,10 +18,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    shm_size: '256mb'
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  analytics_copilot_postgres_data:
     name: analytics_copilot_postgres_data
 
 networks:

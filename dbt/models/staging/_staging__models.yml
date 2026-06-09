@@ -40,7 +40,7 @@ models:
         description: "Timestamp when the order was handed to the carrier. Nullable."
       - name: order_delivered_customer_date
         description: "Timestamp when the order was delivered to the customer. Nullable."
-      - name: estimated_delivery_date
+      - name: order_estimated_delivery_date
         description: "Estimated delivery date shown to customer at purchase. Always midnight in source — cast to date."
 
   - name: stg__order_items
@@ -159,6 +159,39 @@ models:
         description: "Seller city name."
       - name: seller_state
         description: "Seller state abbreviation (2 chars)."
+
+  - name: stg__payments
+    description: >
+      Payment options per order. An order can have multiple payment methods.
+      Grain: one row per (order_id, payment_sequential).
+    columns:
+      - name: order_id
+        description: "Foreign key to stg__orders."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg__orders')
+                field: order_id
+      - name: payment_sequential
+        description: "Payment sequence number within the order (1-based)."
+        tests:
+          - not_null
+      - name: payment_type
+        description: "Payment method (credit_card, boleto, voucher, debit_card)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [credit_card, boleto, voucher, debit_card, not_defined]
+      - name: payment_installments
+        description: "Number of installments chosen for this payment."
+        tests:
+          - not_null
+      - name: payment_value
+        description: "Payment amount in BRL."
+        tests:
+          - not_null
 
   - name: stg__reviews
     description: >
