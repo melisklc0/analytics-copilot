@@ -52,10 +52,6 @@ models:
         tests:
           - not_null
 
-      - name: order_quarter
-        tests:
-          - not_null
-
       - name: delivery_days
         description: "Days from purchase to customer delivery. NULL for non-delivered orders."
 
@@ -73,36 +69,31 @@ models:
         tests:
           - not_null
 
-      - name: gross_product_revenue
+      - name: gross_revenue
         description: "SUM(price) across all items — freight excluded."
         tests:
           - not_null
 
-      - name: total_freight_charged
+      - name: total_freight
         description: "SUM(freight_value) across all items."
         tests:
           - not_null
 
-      - name: gross_order_value
-        description: "gross_product_revenue + total_freight_charged. Total amount charged to the customer (item prices + shipping)."
+      - name: total_revenue
+        description: "gross_revenue + total_freight. Total amount charged to the customer."
         tests:
           - not_null
 
-      - name: dominant_payment_type
+      - name: payment_type
         description: "Payment method with the highest total payment_value for this order."
 
-      - name: dominant_payment_installments
+      - name: payment_installments
         description: "Installment count of the dominant payment type. 0 when no payment data."
         tests:
           - not_null
 
       - name: total_payment_value
         description: "Sum of payment_value across all payment methods for this order. 0 when no payment data."
-        tests:
-          - not_null
-
-      - name: has_multiple_payment_methods
-        description: "True when the order was paid with more than one payment type (e.g. credit card + voucher)."
         tests:
           - not_null
 
@@ -140,10 +131,6 @@ models:
           - not_null
 
       - name: order_month
-        tests:
-          - not_null
-
-      - name: order_quarter
         tests:
           - not_null
 

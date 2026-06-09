@@ -43,7 +43,6 @@ orders as (
         order_date,
         order_year,
         order_month,
-        order_quarter,
         customer_state,
         is_delivered,
         is_on_time,
@@ -60,7 +59,6 @@ select
     o.order_date,
     o.order_year,
     o.order_month,
-    o.order_quarter,
 
     -- Customer geography (denormalized for mart filtering)
     o.customer_state,
