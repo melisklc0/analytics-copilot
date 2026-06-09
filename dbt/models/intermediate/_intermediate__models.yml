@@ -1,3 +1,178 @@
 version: 2
 
-models: []
+models:
+  - name: int__orders_enriched
+    description: >
+      Central order hub. Joins orders, customers, item aggregates, payments, and reviews
+      into one row per order_id. Grain is order_id. No mart-level aggregation here —
+      totals (gross_revenue, total_items) are computed over items but the result stays
+      at order grain. All downstream marts are fed from this model or int__order_items_enriched.
+    columns:
+      - name: order_id
+        description: "PK — unique order identifier."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Person identifier (source: customer_unique_id). Stable across orders."
+        tests:
+          - not_null
+
+      - name: customer_order_key
+        description: "Order-scoped surrogate (source: customer_id). Used only for joins back to stg__orders."
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "2-char Brazilian state abbreviation."
+        tests:
+          - not_null
+
+      - name: order_status
+        description: "Raw order lifecycle status."
+        tests:
+          - not_null
+
+      - name: is_delivered
+        description: "True when order_status = 'delivered'."
+        tests:
+          - not_null
+
+      - name: order_date
+        description: "DATE of order_purchase_timestamp."
+        tests:
+          - not_null
+
+      - name: order_year
+        tests:
+          - not_null
+
+      - name: order_month
+        tests:
+          - not_null
+
+      - name: delivery_days
+        description: "Days from purchase to customer delivery. NULL for non-delivered orders."
+
+      - name: estimated_delivery_days
+        description: "Days from purchase to estimated delivery date."
+
+      - name: days_late
+        description: "delivery_days - estimated_delivery_days. Negative = early. NULL for non-delivered."
+
+      - name: is_on_time
+        description: "True when delivered_date <= estimated_delivery_date. NULL for non-delivered."
+
+      - name: total_items
+        description: "Count of items in the order."
+        tests:
+          - not_null
+
+      - name: gross_revenue
+        description: "SUM(price) across all items — freight excluded."
+        tests:
+          - not_null
+
+      - name: total_freight
+        description: "SUM(freight_value) across all items."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "gross_revenue + total_freight. Total amount charged to the customer."
+        tests:
+          - not_null
+
+      - name: payment_type
+        description: "Payment method with the highest total payment_value for this order."
+
+      - name: payment_installments
+        description: "Installment count of the dominant payment type. 0 when no payment data."
+        tests:
+          - not_null
+
+      - name: total_payment_value
+        description: "Sum of payment_value across all payment methods for this order. 0 when no payment data."
+        tests:
+          - not_null
+
+      - name: review_score
+        description: "Review score 1–5. NULL if no review was submitted."
+
+      - name: has_review
+        description: "True when review_score is not null."
+        tests:
+          - not_null
+
+  - name: int__order_items_enriched
+    description: >
+      Item-level hub. Enriches each order item with product category, seller location,
+      and order-grain context (time columns, customer_state, delivery status, review_score)
+      pulled from int__orders_enriched. Grain is (order_id, order_item_id).
+      Used as the primary source for category and seller mart models.
+    columns:
+      - name: order_id
+        description: "Part of composite PK."
+        tests:
+          - not_null
+
+      - name: order_item_id
+        description: "Part of composite PK — sequential item number within the order."
+        tests:
+          - not_null
+
+      - name: order_date
+        tests:
+          - not_null
+
+      - name: order_year
+        tests:
+          - not_null
+
+      - name: order_month
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "Denormalized from int__orders_enriched for mart-level WHERE filters."
+
+      - name: is_delivered
+        description: "Denormalized from int__orders_enriched."
+
+      - name: is_on_time
+        description: "Denormalized from int__orders_enriched."
+
+      - name: product_id
+        description: "FK → dim_products."
+        tests:
+          - not_null
+
+      - name: product_category_name_english
+        description: "English category name. NULL when category is unmapped."
+
+      - name: seller_id
+        description: "FK → dim_sellers."
+        tests:
+          - not_null
+
+      - name: seller_state
+        description: "2-char state of the seller."
+
+      - name: price
+        description: "Item price in BRL."
+        tests:
+          - not_null
+
+      - name: freight_value
+        description: "Item freight cost in BRL."
+        tests:
+          - not_null
+
+      - name: item_revenue
+        description: "price + freight_value."
+        tests:
+          - not_null
+
+      - name: review_score
+        description: "Order-level review score repeated at item grain. NULL if no review."
