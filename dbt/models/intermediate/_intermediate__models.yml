@@ -58,8 +58,8 @@ models:
       - name: estimated_delivery_days
         description: "Days from purchase to estimated delivery date."
 
-      - name: days_late
-        description: "delivery_days - estimated_delivery_days. Negative = early. NULL for non-delivered."
+      - name: days_from_estimate
+        description: "Actual delivery date minus estimated delivery date. Positive = late, negative = early. NULL for non-delivered."
 
       - name: is_on_time
         description: "True when delivered_date <= estimated_delivery_date. NULL for non-delivered."

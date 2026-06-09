@@ -107,7 +107,7 @@ select
     case
         when o.is_delivered
         then o.order_delivered_customer_date::date - o.order_estimated_delivery_date
-    end as days_late,
+    end as days_from_estimate,
 
     case
         when o.is_delivered
