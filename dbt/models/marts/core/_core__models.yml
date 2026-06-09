@@ -1,0 +1,122 @@
+version: 2
+
+models:
+  - name: dim_dates
+    description: >
+      Calendar dimension spanning 2016-01-01 to 2018-12-31 (Olist dataset range).
+      Generated with dbt_utils.date_spine. Used as the time dimension in the star schema
+      — fct_orders and fct_order_items join to this table via order_date_key.
+    columns:
+      - name: date_day
+        description: "PK — calendar date."
+        tests:
+          - not_null
+          - unique
+
+      - name: year
+        tests:
+          - not_null
+
+      - name: quarter
+        tests:
+          - not_null
+
+      - name: month
+        tests:
+          - not_null
+
+      - name: month_name
+        description: "Full month name, e.g. 'January'."
+        tests:
+          - not_null
+
+      - name: week_of_year
+        description: "ISO week number (1–53)."
+        tests:
+          - not_null
+
+      - name: day_of_week
+        description: "ISO day of week: 1 = Monday, 7 = Sunday."
+        tests:
+          - not_null
+
+      - name: day_name
+        description: "Full day name, e.g. 'Monday'."
+        tests:
+          - not_null
+
+      - name: is_weekend
+        description: "True for Saturday and Sunday."
+        tests:
+          - not_null
+
+  - name: dim_customers
+    description: >
+      One row per unique customer (person). The Olist source uses customer_id as an
+      order-scoped surrogate; this dim uses customer_unique_id (renamed to customer_id
+      in staging) as the stable person identifier. Holds static location attributes only —
+      behavioral metrics (LTV, segment) live in mart_customers.
+    columns:
+      - name: customer_id
+        description: "PK — stable person identifier (source: customer_unique_id)."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_city
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "2-char Brazilian state abbreviation."
+        tests:
+          - not_null
+
+  - name: dim_sellers
+    description: >
+      One row per seller. Holds static location attributes.
+      Performance metrics (on-time rate, avg review) live in mart_sellers.
+    columns:
+      - name: seller_id
+        description: "PK."
+        tests:
+          - not_null
+          - unique
+
+      - name: seller_city
+        tests:
+          - not_null
+
+      - name: seller_state
+        description: "2-char Brazilian state abbreviation."
+        tests:
+          - not_null
+
+  - name: dim_products
+    description: >
+      One row per product. Holds category and physical attributes.
+      Join to fct_order_items for category-level revenue analysis.
+    columns:
+      - name: product_id
+        description: "PK."
+        tests:
+          - not_null
+          - unique
+
+      - name: product_category_name
+        description: "Original Portuguese category name."
+
+      - name: product_category_name_english
+        description: "Translated English category name. NULL when unmapped."
+
+      - name: product_weight_g
+        description: "Product weight in grams."
+
+      - name: product_photos_qty
+        description: "Number of product photos."
+
+      - name: product_length_cm
+
+      - name: product_height_cm
+
+      - name: product_width_cm
