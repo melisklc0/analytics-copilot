@@ -1,3 +1,198 @@
 version: 2
 
-models: []
+models:
+  - name: stg__orders
+    description: >
+      Cleaned orders with row-level delivery metrics.
+      Grain: one row per order_id.
+    columns:
+      - name: order_id
+        description: "Unique order identifier."
+        tests:
+          - not_null
+          - unique
+      - name: customer_order_key
+        description: "Order-scoped customer surrogate. Joins to stg__customers.customer_order_key."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg__customers')
+                field: customer_order_key
+      - name: order_status
+        description: "Order lifecycle status."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [delivered, shipped, canceled, invoiced, processing, approved, unavailable, created]
+      - name: is_delivered
+        description: "True when order_status = 'delivered'."
+        tests:
+          - not_null
+      - name: order_purchase_timestamp
+        description: "When the order was placed."
+        tests:
+          - not_null
+      - name: order_approved_at
+        description: "When payment was approved. Nullable."
+      - name: order_delivered_carrier_date
+        description: "Timestamp when the order was handed to the carrier. Nullable."
+      - name: order_delivered_customer_date
+        description: "Timestamp when the order was delivered to the customer. Nullable."
+      - name: estimated_delivery_date
+        description: "Estimated delivery date shown to customer at purchase. Always midnight in source — cast to date."
+
+  - name: stg__order_items
+    description: >
+      Order line items with item-level revenue pre-computed.
+      Grain: one row per (order_id, order_item_id).
+    columns:
+      - name: order_id
+        description: "Foreign key to stg__orders."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg__orders')
+                field: order_id
+      - name: order_item_id
+        description: "Sequential item number within the order (1-based)."
+        tests:
+          - not_null
+      - name: product_id
+        description: "Foreign key to stg__products."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg__products')
+                field: product_id
+      - name: seller_id
+        description: "Foreign key to stg__sellers."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg__sellers')
+                field: seller_id
+      - name: shipping_limit_date
+        description: "Latest date for seller to hand off to carrier."
+      - name: price
+        description: "Item price in BRL."
+        tests:
+          - not_null
+      - name: freight_value
+        description: "Freight cost for this item in BRL."
+        tests:
+          - not_null
+      - name: item_revenue
+        description: "price + freight_value. Total cost to buyer for this line item."
+        tests:
+          - not_null
+
+  - name: stg__products
+    description: >
+      Products with corrected column names and English category names.
+      Grain: one row per product_id.
+    columns:
+      - name: product_id
+        description: "Unique product identifier."
+        tests:
+          - not_null
+          - unique
+      - name: product_category_name
+        description: "Product category in Portuguese (from source)."
+      - name: product_category_name_english
+        description: "Product category translated to English. Null if no translation exists."
+      - name: product_name_length
+        description: "Number of characters in product name (typo corrected from source)."
+      - name: product_description_length
+        description: "Number of characters in product description (typo corrected from source)."
+      - name: product_photos_qty
+        description: "Number of product photos."
+      - name: product_weight_g
+        description: "Product weight in grams."
+      - name: product_length_cm
+        description: "Product length in centimeters."
+      - name: product_height_cm
+        description: "Product height in centimeters."
+      - name: product_width_cm
+        description: "Product width in centimeters."
+
+  - name: stg__customers
+    description: >
+      Customer master data with corrected identifiers.
+      Grain: one row per customer_order_key.
+      customer_id here is the stable person identifier (source: customer_unique_id).
+      customer_order_key is the order-scoped surrogate used to join to stg__orders.
+    columns:
+      - name: customer_order_key
+        description: "Order-scoped surrogate (renamed from source customer_id). Joins to stg__orders.customer_order_key."
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Stable person identifier across all orders (renamed from source customer_unique_id)."
+        tests:
+          - not_null
+      - name: customer_zip_code_prefix
+        description: "First 5 digits of customer zip code."
+      - name: customer_city
+        description: "Customer city name."
+      - name: customer_state
+        description: "Customer state abbreviation (2 chars)."
+
+  - name: stg__sellers
+    description: >
+      Seller location data.
+      Grain: one row per seller_id.
+    columns:
+      - name: seller_id
+        description: "Unique seller identifier."
+        tests:
+          - not_null
+          - unique
+      - name: seller_zip_code_prefix
+        description: "First 5 digits of seller zip code."
+      - name: seller_city
+        description: "Seller city name."
+      - name: seller_state
+        description: "Seller state abbreviation (2 chars)."
+
+  - name: stg__reviews
+    description: >
+      Customer satisfaction reviews per order.
+      Grain: one row per (review_id, order_id).
+    columns:
+      - name: review_id
+        description: "Review identifier. Not unique on its own — use composite key with order_id."
+        tests:
+          - not_null
+      - name: order_id
+        description: "Foreign key to stg__orders."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg__orders')
+                field: order_id
+      - name: review_score
+        description: "Score from 1 (worst) to 5 (best)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+      - name: review_comment_title
+        description: "Short title of the review comment. Nullable."
+      - name: review_comment_message
+        description: "Full review comment text. Nullable."
+      - name: has_comment
+        description: "True when either review_comment_title or review_comment_message is present."
+        tests:
+          - not_null
+      - name: review_creation_date
+        description: "When the review survey was sent."
+      - name: review_answer_timestamp
+        description: "When the customer answered the survey."
