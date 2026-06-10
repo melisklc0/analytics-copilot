@@ -1,0 +1,581 @@
+/* ==========================================================================
+   Analytics Copilot Superset Theme
+   --------------------------------------------------------------------------
+   Dashboard-level CSS intended for Superset CSS templates. It keeps Superset's
+   useful class targets while using the Analytics Copilot / portfolio palette.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --ac-ink: #082235;
+  --ac-text: #102738;
+  --ac-text-soft: #365060;
+  --ac-muted: #758896;
+  --ac-primary: #2D607D;
+  --ac-primary-dark: #0F3248;
+  --ac-primary-soft: #DCECF2;
+  --ac-coffee: #A06448;
+  --ac-coffee-soft: #F3E1D3;
+  --ac-page: #FFF8F0;
+  --ac-surface: #FFFDF9;
+  --ac-surface-soft: #FFFCF7;
+  --ac-border: #E7D8CA;
+  --ac-border-soft: #F1E7DD;
+  --ac-shadow: 0 18px 48px -36px rgba(15, 50, 72, 0.34), 0 2px 8px rgba(15, 50, 72, 0.05);
+  --ac-shadow-soft: 0 1px 2px rgba(15, 50, 72, 0.05), 0 10px 30px -28px rgba(15, 50, 72, 0.35);
+  --border-light: var(--ac-border) !important;
+  --ant-color-border-secondary: var(--ac-border-soft) !important;
+}
+
+* {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  box-sizing: border-box !important;
+}
+
+.ace_editor,
+.ace_editor * {
+  font-family: 'IBM Plex Mono', 'Fira Code', 'Consolas', monospace !important;
+}
+
+body,
+.dashboard-content {
+  color: var(--ac-text) !important;
+  background:
+    radial-gradient(ellipse 80% 46% at 45% -18%, rgba(45, 96, 125, 0.12), transparent),
+    linear-gradient(rgba(15, 50, 72, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 50, 72, 0.02) 1px, transparent 1px),
+    var(--ac-page) !important;
+  background-size: auto, 48px 48px, 48px 48px, auto !important;
+}
+
+.anticon.anticon-warning {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Typography
+   -------------------------------------------------------------------------- */
+
+.header-line {
+  color: var(--ac-primary-dark) !important;
+  font-family: 'Fraunces', Georgia, serif !important;
+  font-size: 52px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.05 !important;
+}
+
+.header-title {
+  color: var(--ac-text) !important;
+  font-family: 'Fraunces', Georgia, serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+.subheader-line {
+  color: var(--ac-muted) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1.55 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Dashboard Containers
+   -------------------------------------------------------------------------- */
+
+.dashboard-component-chart-holder {
+  background: rgba(255, 253, 249, 0.94) !important;
+  border: 1px solid var(--ac-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--ac-shadow-soft) !important;
+  margin-top: 12px !important;
+  padding: 16px !important;
+}
+
+.dashboard-component-chart-holder.fade-out {
+  border-radius: 8px !important;
+  box-shadow: var(--ac-shadow-soft) !important;
+}
+
+.radar canvas {
+  filter: saturate(0.96) contrast(1.04) brightness(1.01) !important;
+}
+
+div[class*="superset-"] {
+  box-sizing: border-box !important;
+}
+
+/* --------------------------------------------------------------------------
+   Tabs
+   -------------------------------------------------------------------------- */
+
+.dashboard-component-tabs {
+  background: transparent !important;
+  border-bottom: 1px solid var(--ac-border-soft) !important;
+  margin-top: -4px !important;
+  padding-top: 0 !important;
+}
+
+.ant-tabs-nav .ant-tabs-tab {
+  margin: 0 8px 0 0 !important;
+  padding: 7px 2px 8px !important;
+}
+
+.ant-tabs-nav .ant-tabs-nav-list,
+.ant-tabs-tab-btn {
+  color: var(--ac-muted) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--ac-primary-dark) !important;
+}
+
+.dashboard-component-tabs .ant-tabs-tab .anticon,
+.dashboard-component-tabs .ant-tabs-tab svg,
+.dashboard-component-tabs .ant-tabs-tab i {
+  display: none !important;
+}
+
+.ant-tabs-ink-bar {
+  background: var(--ac-coffee) !important;
+  height: 2px !important;
+}
+
+.ant-tabs-tab {
+  border-bottom: 1px solid transparent !important;
+}
+
+.ant-tabs-tab:hover .ant-tabs-tab-btn {
+  color: var(--ac-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Filters and Dropdowns
+   -------------------------------------------------------------------------- */
+
+.ant-select-selector {
+  background: var(--ac-surface) !important;
+  border-color: var(--ac-border) !important;
+  border-radius: 8px !important;
+  min-height: 36px !important;
+}
+
+.ant-select-selector:hover,
+.ant-select-focused:not(.ant-select-disabled).ant-select-single:not(.ant-select-customize-input) .ant-select-selector,
+.ant-select-focused:not(.ant-select-disabled).ant-select-multiple .ant-select-selector {
+  border-color: var(--ac-primary) !important;
+  box-shadow: 0 0 0 2px rgba(45, 96, 125, 0.12) !important;
+}
+
+.ant-select-arrow svg,
+.ant-select-suffix svg,
+.anticon-search svg,
+.anticon-down svg,
+.ant-select-selection-placeholder,
+.ant-select-selection-search-input {
+  color: var(--ac-muted) !important;
+}
+
+.ant-select-dropdown,
+.ant-popover-inner {
+  background: var(--ac-surface) !important;
+  border: 1px solid var(--ac-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--ac-shadow) !important;
+}
+
+.ant-select-dropdown {
+  padding: 6px !important;
+}
+
+.ant-select-dropdown .ant-select-item {
+  border-bottom: none !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  min-height: 32px !important;
+  padding: 7px 10px !important;
+}
+
+.ant-select-item-option {
+  margin: 2px 0 !important;
+  transition: background-color 0.16s ease, color 0.16s ease !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-active {
+  background: var(--ac-primary-soft) !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.ant-select-selection-item {
+  background: var(--ac-primary-soft) !important;
+  border: 1px solid rgba(45, 96, 125, 0.12) !important;
+  border-radius: 6px !important;
+  color: var(--ac-primary-dark) !important;
+  height: auto !important;
+  white-space: normal !important;
+}
+
+.ant-select-dropdown .ant-select-item-option-content,
+.ant-select-dropdown .ant-select-item-group {
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  white-space: normal !important;
+}
+
+.ant-select-dropdown .superset-button-link {
+  color: var(--ac-primary) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
+}
+
+.ant-collapse-item.ant-collapse-item-disabled {
+  display: none !important;
+}
+
+.ant-select-dropdown .rc-virtual-list-holder {
+  max-height: 180px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Filter Buttons
+   -------------------------------------------------------------------------- */
+
+.filter-apply-button {
+  background: var(--ac-primary-dark) !important;
+  border-color: var(--ac-primary-dark) !important;
+  border-radius: 8px !important;
+  color: #FFFFFF !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+}
+
+.filter-apply-button[disabled],
+.filter-apply-button:disabled {
+  background: var(--ac-primary-soft) !important;
+  border-color: var(--ac-primary-soft) !important;
+  color: rgba(15, 50, 72, 0.55) !important;
+  opacity: 1 !important;
+}
+
+.filter-apply-button:not([disabled]):hover {
+  background: var(--ac-primary) !important;
+  border-color: var(--ac-primary) !important;
+  color: #FFFFFF !important;
+}
+
+.filter-clear-all-button {
+  background: transparent !important;
+  color: var(--ac-muted) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+}
+
+.filter-clear-all-button:hover {
+  background: transparent !important;
+  color: var(--ac-primary-dark) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Empty States
+   -------------------------------------------------------------------------- */
+
+div[role="img"][aria-label="empty"] svg {
+  opacity: 0.78 !important;
+  stroke: var(--ac-muted) !important;
+}
+
+div[role="img"][aria-label="empty"] {
+  color: var(--ac-muted) !important;
+  height: 220px !important;
+  margin-bottom: 18px !important;
+  opacity: 1 !important;
+  width: 100% !important;
+}
+
+div[role="img"][aria-label="empty"] + div > p:nth-of-type(1) {
+  color: var(--ac-text-soft) !important;
+  font-family: 'Fraunces', Georgia, serif !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  margin-bottom: 6px !important;
+  text-align: center !important;
+}
+
+.ant-empty-description {
+  color: var(--ac-muted) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.6 !important;
+  text-align: center !important;
+}
+
+.ant-select-dropdown .ant-empty .ant-empty-image svg,
+.ant-select-dropdown .ant-empty .ant-empty-image img {
+  opacity: 0.72 !important;
+}
+
+.ant-select-dropdown .ant-empty .ant-empty-description {
+  color: var(--ac-muted) !important;
+  font-size: 13px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbars
+   -------------------------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  height: 9px !important;
+  width: 9px !important;
+}
+
+::-webkit-scrollbar-track,
+.rc-virtual-list-scrollbar {
+  background: var(--ac-border-soft) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(54, 80, 96, 0.42) !important;
+  border: 2px solid var(--ac-border-soft) !important;
+  border-radius: 999px !important;
+}
+
+::-webkit-scrollbar-thumb:hover,
+.rc-virtual-list-scrollbar-thumb:hover {
+  background: rgba(54, 80, 96, 0.62) !important;
+}
+
+*,
+[class^="superset-"] {
+  scrollbar-color: rgba(54, 80, 96, 0.5) var(--ac-border-soft) !important;
+  scrollbar-width: thin;
+}
+
+.rc-virtual-list-scrollbar {
+  border-radius: 999px !important;
+  width: 9px !important;
+}
+
+.rc-virtual-list-scrollbar-thumb {
+  background: rgba(54, 80, 96, 0.48) !important;
+  border-radius: 999px !important;
+  left: 2px !important;
+  right: auto !important;
+  width: 5px !important;
+}
+
+/* --------------------------------------------------------------------------
+   ECharts Tooltip
+   -------------------------------------------------------------------------- */
+
+.echarts-tooltip,
+div[style*="z-index: 9999999"] {
+  background: rgba(255, 253, 249, 0.98) !important;
+  border: 1px solid var(--ac-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--ac-shadow) !important;
+  box-sizing: border-box !important;
+  color: var(--ac-text) !important;
+  line-height: 1.35 !important;
+  width: auto !important;
+}
+
+div[style*="z-index: 9999999"] table {
+  margin-top: 6px !important;
+}
+
+div[style*="z-index: 9999999"] table,
+div[style*="z-index: 9999999"] table tbody {
+  border: none !important;
+  display: block !important;
+}
+
+div[style*="z-index: 9999999"] table tbody {
+  align-content: flex-start !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: wrap !important;
+  gap: 0 24px !important;
+  max-height: 300px !important;
+}
+
+div[style*="z-index: 9999999"] table tbody tr {
+  align-items: center !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  justify-content: space-between !important;
+}
+
+/* --------------------------------------------------------------------------
+   Tables
+   -------------------------------------------------------------------------- */
+
+.dashboard-component-chart-holder table {
+  background: transparent !important;
+  border: 1px solid var(--ac-border) !important;
+  border-collapse: separate !important;
+  border-radius: 8px !important;
+  border-spacing: 0 !important;
+  overflow: hidden !important;
+  width: 100% !important;
+}
+
+.dashboard-component-chart-holder th {
+  background: var(--ac-primary-dark) !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #FFFFFF !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  height: 44px !important;
+  line-height: 1.25 !important;
+  min-height: 44px !important;
+  padding: 0 12px !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+.dashboard-component-chart-holder td {
+  background: var(--ac-surface) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--ac-border-soft) !important;
+  color: var(--ac-text-soft) !important;
+  height: 48px !important;
+  line-height: 1.35 !important;
+  max-height: 48px !important;
+  min-height: 48px !important;
+  overflow: hidden !important;
+  padding: 0 12px !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+.dashboard-component-chart-holder tbody tr:nth-child(even) td {
+  background: var(--ac-surface-soft) !important;
+}
+
+.dashboard-component-chart-holder tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+.dashboard-component-chart-holder tbody tr:hover td {
+  background: var(--ac-primary-soft) !important;
+  color: var(--ac-primary-dark) !important;
+  transition: background-color 0.16s ease, color 0.16s ease !important;
+}
+
+.superset-chart-table div[role="table"] > div[role="presentation"] {
+  overflow-y: hidden !important;
+}
+
+.superset-chart-table div[role="presentation"] {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* --------------------------------------------------------------------------
+   Pivot Tables
+   -------------------------------------------------------------------------- */
+
+.pvtTable {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.dashboard-component-chart-holder .pvtTable {
+  border: 1px solid var(--ac-border) !important;
+  border-radius: 8px !important;
+  clip-path: none !important;
+  margin: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  width: 100% !important;
+}
+
+.dashboard-component-chart-holder .pvtTable th,
+.dashboard-component-chart-holder .pvtTable td {
+  height: 40px !important;
+  line-height: 1.25 !important;
+  max-height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 10px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.dashboard-component-chart-holder .pvtTable thead th {
+  background: var(--ac-primary-dark) !important;
+  color: #FFFFFF !important;
+}
+
+.dashboard-component-chart-holder .pvtTable tbody th {
+  background: var(--ac-coffee-soft) !important;
+  color: var(--ac-text) !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+}
+
+.dashboard-component-chart-holder .pvtTable tbody td {
+  color: var(--ac-text-soft) !important;
+}
+
+.dashboard-component-chart-holder .pvtTable tbody tr:hover td,
+.dashboard-component-chart-holder .pvtTable tbody tr:hover th {
+  background: var(--ac-primary-soft) !important;
+  color: var(--ac-primary-dark) !important;
+}
+
+.dashboard-component-chart-holder .pvtTable tbody tr:has(th + th) > * {
+  border-top: 1px solid var(--ac-coffee) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Filter Sidebar Loading
+   -------------------------------------------------------------------------- */
+
+.ant-form-item-control-input-content div[orientation="VERTICAL"] img {
+  display: none !important;
+}
+
+.dashboard-filters-panel {
+  position: relative;
+}
+
+.dashboard-filters-panel .loading-indicator {
+  background:
+    radial-gradient(circle, var(--ac-primary) 0 22%, transparent 24%),
+    conic-gradient(from 90deg, transparent, rgba(45, 96, 125, 0.3), var(--ac-primary)) !important;
+  border-radius: 999px !important;
+  height: 46px !important;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 46px !important;
+  z-index: 100;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media only screen and (max-width: 1400px) {
+  div[role="img"][aria-label="empty"] {
+    height: 180px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .dashboard-component-chart-holder .header-line {
+    font-size: 42px !important;
+    line-height: 1.12 !important;
+  }
+}
