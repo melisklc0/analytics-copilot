@@ -194,7 +194,12 @@ else:
 # 3. BRANDING
 # =============================================================================
 APP_NAME = "Analytics Copilot"
-LOGO_TOOLTIP = "Analytics Copilot — dbt-powered BI"
+LOGO_TOOLTIP = "Analytics Copilot"
+APP_ICON = "/static/assets/images/analytics-copilot/logo.svg?v=analytics-copilot-2"
+APP_ICON_WIDTH = 210
+FAVICONS = [
+    {"href": "/static/assets/images/analytics-copilot/favicon.svg?v=analytics-copilot-1"}
+]
 
 # =============================================================================
 # 4. COLOR SCHEMES
@@ -206,16 +211,16 @@ EXTRA_CATEGORICAL_COLOR_SCHEMES: list[dict[str, Any]] = [
         "description": "Primary palette for the Analytics Copilot dashboards",
         "isDefault": True,
         "colors": [
-            "#2563EB",  # Blue 600
-            "#16A34A",  # Green 600
-            "#D97706",  # Amber 600
-            "#DC2626",  # Red 600
-            "#7C3AED",  # Violet 600
-            "#0891B2",  # Cyan 600
-            "#EA580C",  # Orange 600
-            "#BE185D",  # Pink 700
-            "#4F46E5",  # Indigo 600
-            "#65A30D",  # Lime 600
+            "#0F3248",
+            "#2D607D",
+            "#A06448",
+            "#8D7B70",
+            "#365060",
+            "#758896",
+            "#DCECF2",
+            "#F3E1D3",
+            "#102738",
+            "#E7D8CA",
         ],
     },
     {
@@ -223,10 +228,10 @@ EXTRA_CATEGORICAL_COLOR_SCHEMES: list[dict[str, Any]] = [
         "label": "Analytics Status",
         "description": "Status / alert palette (success → warning → error)",
         "colors": [
-            "#16A34A",  # Success
-            "#2563EB",  # Info
-            "#D97706",  # Warning
-            "#DC2626",  # Error
+            "#2D607D",
+            "#365060",
+            "#A06448",
+            "#B4533F",
         ],
     },
 ]
@@ -234,36 +239,36 @@ EXTRA_CATEGORICAL_COLOR_SCHEMES: list[dict[str, Any]] = [
 EXTRA_SEQUENTIAL_COLOR_SCHEMES: list[dict[str, Any]] = [
     {
         "id": "analytics_blue_seq",
-        "label": "Analytics Blue (Sequential)",
+        "label": "Portfolio Ink (Sequential)",
         "isDiverging": False,
         "colors": [
-            "#DBEAFE",
-            "#BFDBFE",
-            "#93C5FD",
-            "#60A5FA",
-            "#3B82F6",
-            "#2563EB",
-            "#1D4ED8",
-            "#1E40AF",
-            "#1E3A8A",
-            "#172554",
+            "#FFFCF7",
+            "#FFF8F0",
+            "#DCECF2",
+            "#B9D8E3",
+            "#7CA8BC",
+            "#2D607D",
+            "#214E68",
+            "#0F3248",
+            "#102738",
+            "#082235",
         ],
     },
     {
         "id": "analytics_perf_div",
-        "label": "Analytics Performance (Diverging)",
+        "label": "Portfolio Performance (Diverging)",
         "isDiverging": True,
         "colors": [
-            "#DC2626",
-            "#EF4444",
-            "#F87171",
-            "#FCA5A5",
-            "#F5F5F5",
-            "#86EFAC",
-            "#4ADE80",
-            "#22C55E",
-            "#16A34A",
-            "#15803D",
+            "#B4533F",
+            "#A06448",
+            "#C58A70",
+            "#F3E1D3",
+            "#FFF8F0",
+            "#DCECF2",
+            "#7CA8BC",
+            "#2D607D",
+            "#0F3248",
+            "#082235",
         ],
     },
 ]
@@ -273,21 +278,28 @@ EXTRA_SEQUENTIAL_COLOR_SCHEMES: list[dict[str, Any]] = [
 # =============================================================================
 THEME_DEFAULT = {
     "token": {
-        "colorPrimary": "#2563EB",
-        "colorSuccess": "#16A34A",
-        "colorWarning": "#D97706",
-        "colorError": "#DC2626",
-        "colorInfo": "#0891B2",
-        "colorBgBase": "#FFFFFF",
-        "colorBgContainer": "#F8FAFC",
-        "colorBgElevated": "#FFFFFF",
-        "colorBgLayout": "#F1F5F9",
-        "colorText": "#0F172A",
-        "colorTextSecondary": "#475569",
-        "colorTextTertiary": "#94A3B8",
-        "colorBorder": "#E2E8F0",
-        "colorBorderSecondary": "#CBD5E1",
+        "colorPrimary": "#2D607D",
+        "colorSuccess": "#2D607D",
+        "colorWarning": "#A06448",
+        "colorError": "#B4533F",
+        "colorInfo": "#365060",
+        "colorBgBase": "#FFF8F0",
+        "colorBgContainer": "#FFFDF9",
+        "colorBgElevated": "#FFFCF7",
+        "colorBgLayout": "#FFF8F0",
+        "colorText": "#102738",
+        "colorTextSecondary": "#365060",
+        "colorTextTertiary": "#758896",
+        "colorBorder": "#E7D8CA",
+        "colorBorderSecondary": "#F1E7DD",
         "fontFamily": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        "fontFamilyCode": "'IBM Plex Mono', 'Fira Code', monospace",
+        "brandLogoAlt": "Analytics Copilot",
+        "brandLogoUrl": "/static/assets/images/analytics-copilot/logo.svg?v=analytics-copilot-2",
+        "brandLogoHref": "/",
+        "brandLogoHeight": "40px",
+        "brandLogoMargin": "10px 24px",
+        "brandIconMaxWidth": 210,
         "fontSize": 14,
         "borderRadius": 8,
         "borderRadiusLg": 12,
@@ -301,7 +313,7 @@ ENABLE_UI_THEME_ADMINISTRATION = True
 
 THEME_FONT_URL_ALLOWED_DOMAINS = ["fonts.googleapis.com", "fonts.gstatic.com"]
 CUSTOM_FONT_URLS: list[str] = [
-    "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+    "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap",
 ]
 
 # =============================================================================
