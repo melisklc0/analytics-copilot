@@ -151,7 +151,9 @@ class CustomSecurityManager(SupersetSecurityManager):
     def _grant_permissions(self, role_name, permission_view_menus):
         role = self.find_role(role_name) or self.add_role(role_name)
         if not role:
-            log.warning("Superset role sync skipped: role unavailable role=%s", role_name)
+            log.warning(
+                "Superset role sync skipped: role unavailable role=%s", role_name
+            )
             return
 
         for permission_name, view_menu_name in permission_view_menus:
@@ -198,7 +200,9 @@ LOGO_TOOLTIP = "Analytics Copilot"
 APP_ICON = "/static/assets/images/analytics-copilot/logo.svg?v=analytics-copilot-2"
 APP_ICON_WIDTH = 210
 FAVICONS = [
-    {"href": "/static/assets/images/analytics-copilot/favicon.svg?v=analytics-copilot-1"}
+    {
+        "href": "/static/assets/images/analytics-copilot/favicon.svg?v=analytics-copilot-1"
+    }
 ]
 
 # =============================================================================
@@ -403,6 +407,7 @@ RESULTS_BACKEND = RedisCache(
     key_prefix="superset_results",
 )
 
+
 # =============================================================================
 # 10. ASYNC TASKS (Celery)
 # =============================================================================
@@ -418,7 +423,9 @@ CELERY_CONFIG = CeleryConfig
 # =============================================================================
 # 11. SECURITY & AUTH
 # =============================================================================
-SECRET_KEY = os.environ.get("SUPERSET_SECRET_KEY", "local-dev-secret-key-change-in-prod")
+SECRET_KEY = os.environ.get(
+    "SUPERSET_SECRET_KEY", "local-dev-secret-key-change-in-prod"
+)
 
 ENABLE_GUEST_TOKEN = True
 GUEST_TOKEN_JWT_SECRET = os.environ.get(
@@ -455,13 +462,17 @@ PERMANENT_SESSION_LIFETIME = 86400
 # Wildcard origins for CSP frame-ancestors + EMBED_ALLOWED_DOMAINS.
 # analytics_copilot_same_origin handles the wildcard matching logic.
 # Example: EMBED_ALLOWED_ORIGINS=http://localhost:*,https://*.example.com
-_raw_embed_origins = os.environ.get("EMBED_ALLOWED_ORIGINS", "http://localhost:*,https://localhost:*")
+_raw_embed_origins = os.environ.get(
+    "EMBED_ALLOWED_ORIGINS", "http://localhost:*,https://localhost:*"
+)
 _EMBED_ORIGINS: list[str] = [o for o in _raw_embed_origins.split(",") if o]
 
 # Exact origins for CORS pre-flight — Flask-CORS does not support wildcards.
 # Falls back to _EMBED_ORIGINS if not set.
 _raw_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "")
-_CORS_ORIGINS: list[str] = [o for o in _raw_cors_origins.split(",") if o] or _EMBED_ORIGINS
+_CORS_ORIGINS: list[str] = [
+    o for o in _raw_cors_origins.split(",") if o
+] or _EMBED_ORIGINS
 
 ENABLE_CORS = True
 CORS_OPTIONS = {
@@ -481,7 +492,12 @@ TALISMAN_ENABLED = True
 TALISMAN_CONFIG = {
     "content_security_policy": {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'strict-dynamic'"],
+        "script-src": [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            "'strict-dynamic'",
+        ],
         "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
         "img-src": ["'self'", "data:", "blob:", "https:"],
