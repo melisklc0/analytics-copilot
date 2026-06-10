@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS raw.category_translation (
     product_category_name_english VARCHAR(100)
 );
 
--- ── Read-only role ─────────────────────────────────────────────────────────
+-- ── Read-only role (AI executor) ───────────────────────────────────────────
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'analyst_ro') THEN
@@ -110,3 +110,34 @@ GRANT CONNECT ON DATABASE analytics_copilot TO analyst_ro;
 GRANT USAGE ON SCHEMA raw TO analyst_ro;
 GRANT SELECT ON ALL TABLES IN SCHEMA raw TO analyst_ro;
 ALTER DEFAULT PRIVILEGES IN SCHEMA raw GRANT SELECT ON TABLES TO analyst_ro;
+
+-- ── Superset read-only role ────────────────────────────────────────────────
+-- Used by Superset's data source connection to read dbt mart tables.
+-- dbt creates the mart schemas at runtime; ALTER DEFAULT PRIVILEGES ensures
+-- tables created later are automatically accessible.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'superset_ro') THEN
+        CREATE ROLE superset_ro WITH LOGIN PASSWORD 'superset_ro' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+    END IF;
+END
+$$;
+
+GRANT CONNECT ON DATABASE analytics_copilot TO superset_ro;
+
+-- Pre-create schemas so default privileges take effect before dbt runs.
+CREATE SCHEMA IF NOT EXISTS main_marts;
+CREATE SCHEMA IF NOT EXISTS main_staging;
+CREATE SCHEMA IF NOT EXISTS main_intermediate;
+
+GRANT USAGE ON SCHEMA main_marts TO superset_ro;
+GRANT USAGE ON SCHEMA main_staging TO superset_ro;
+GRANT USAGE ON SCHEMA main_intermediate TO superset_ro;
+
+-- Grant analyst_ro the same schema access (used by AI executor).
+GRANT USAGE ON SCHEMA main_marts TO analyst_ro;
+ALTER DEFAULT PRIVILEGES IN SCHEMA main_marts GRANT SELECT ON TABLES TO analyst_ro;
+ALTER DEFAULT PRIVILEGES IN SCHEMA main_marts GRANT SELECT ON TABLES TO superset_ro;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA main_staging GRANT SELECT ON TABLES TO analyst_ro;
+ALTER DEFAULT PRIVILEGES IN SCHEMA main_intermediate GRANT SELECT ON TABLES TO analyst_ro;

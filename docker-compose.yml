@@ -1,6 +1,7 @@
 include:
   - path: infra/api/docker-compose.yml
   - path: infra/postgres/docker-compose.yml
+  - path: infra/superset/docker-compose.yml
 
 networks:
   analytics-copilot-network:

@@ -1,0 +1,5 @@
+# PostgreSQL driver
+psycopg2-binary
+
+# CORS support for embedded dashboards
+flask-cors==6.0.2
