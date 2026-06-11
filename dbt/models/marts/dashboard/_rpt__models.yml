@@ -1,0 +1,255 @@
+version: 2
+
+models:
+  - name: rpt_sales_overview
+    description: >
+      Sales overview presentation table for BI dashboard.
+      One row per (order_year, order_month, customer_state).
+      Aggregates GMV, order volume, and payment method mix.
+      Powers: KPI scorecards, monthly GMV trend, orders-by-state map, payment donut chart.
+    columns:
+      - name: order_year
+        description: "Part of composite PK."
+        tests:
+          - not_null
+
+      - name: order_month
+        description: "Part of composite PK."
+        tests:
+          - not_null
+
+      - name: order_month_start
+        description: "First day of the month (DATE). Use as X-axis for time series charts in Superset."
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "Part of composite PK. 2-char Brazilian state abbreviation."
+        tests:
+          - not_null
+
+      - name: state_iso_3166
+        description: "ISO 3166-2 state code (e.g. BR-SP). Use with Superset Country Map chart."
+        tests:
+          - not_null
+
+      - name: orders_placed
+        description: "Total orders in this year/month/state bucket."
+        tests:
+          - not_null
+
+      - name: orders_delivered
+        description: "Orders with status delivered."
+        tests:
+          - not_null
+
+      - name: gross_revenue
+        description: "Sum of item prices (freight excluded)."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "Sum of gross_revenue + freight."
+        tests:
+          - not_null
+
+      - name: avg_order_value
+        description: "total_revenue / orders_placed."
+        tests:
+          - not_null
+
+      - name: credit_card_share
+        description: "% of orders paid by credit card (count-based)."
+
+      - name: boleto_share
+        description: "% of orders paid by boleto (count-based)."
+
+      - name: voucher_share
+        description: "% of orders paid by voucher (count-based)."
+
+  - name: rpt_delivery_performance
+    description: >
+      Delivery performance KPI table for BI dashboard.
+      One row per (order_year, order_month, customer_state).
+      Covers on-time rate, average delivery days, and review scores split by delivery timeliness.
+      Powers: on-time rate trend, late-vs-on-time review bar, avg delivery days by state.
+    columns:
+      - name: order_year
+        description: "Part of composite PK."
+        tests:
+          - not_null
+
+      - name: order_month
+        description: "Part of composite PK."
+        tests:
+          - not_null
+
+      - name: order_month_start
+        description: "First day of the month (DATE). Use as X-axis for time series charts in Superset."
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "Part of composite PK. 2-char Brazilian state abbreviation."
+        tests:
+          - not_null
+
+      - name: state_iso_3166
+        description: "ISO 3166-2 state code (e.g. BR-SP). Use with Superset Country Map chart."
+        tests:
+          - not_null
+
+      - name: delivered_orders
+        description: "Count of orders with is_delivered = true."
+        tests:
+          - not_null
+
+      - name: on_time_delivery_rate
+        description: "% of delivered orders that arrived on or before estimated date."
+
+      - name: avg_delivery_days
+        description: "Average days from purchase to delivery. NULL-safe: non-delivered orders excluded."
+
+      - name: avg_days_from_estimate
+        description: "Average deviation from estimated delivery date. Positive = late, negative = early."
+
+      - name: avg_review_score_on_time
+        description: "Average review score for on-time deliveries."
+
+      - name: avg_review_score_late
+        description: "Average review score for late deliveries."
+
+  - name: rpt_customer_segments
+    description: >
+      Customer value and segment distribution for BI dashboard.
+      One row per (customer_state, customer_segment).
+      Segment logic: new (1 order), returning (2-4 orders), loyal (5+ orders).
+      Includes revenue contribution metrics to answer "loyal customers = majority of revenue?"
+    columns:
+      - name: customer_state
+        description: "Part of composite PK. 2-char Brazilian state abbreviation."
+        tests:
+          - not_null
+
+      - name: customer_segment
+        description: "Part of composite PK. Values: new, returning, loyal."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['new', 'returning', 'loyal']
+
+      - name: customer_count
+        description: "Number of unique customers in this state × segment bucket."
+        tests:
+          - not_null
+
+      - name: customer_share_pct
+        description: "% of total customers this bucket represents (across all states and segments)."
+
+      - name: segment_revenue
+        description: "Total revenue from customers in this bucket."
+
+      - name: revenue_share_pct
+        description: "% of total revenue this bucket represents."
+
+      - name: avg_total_revenue
+        description: "Average lifetime revenue per customer in this bucket."
+
+      - name: avg_order_count
+        description: "Average number of orders per customer in this bucket."
+
+      - name: avg_review_score
+        description: "Average review score across all orders from customers in this bucket."
+
+  - name: rpt_product_categories
+    description: >
+      Category performance summary for BI dashboard.
+      One row per product_category_name_english.
+      Covers revenue contribution, customer satisfaction, and delivery reliability per category.
+      Powers: top categories bar, review score ranking, delivery issues by category, revenue vs quality scatter.
+    columns:
+      - name: product_category_name_english
+        description: "PK — English product category name."
+        tests:
+          - not_null
+          - unique
+
+      - name: total_orders
+        description: "Distinct orders containing at least one item from this category."
+        tests:
+          - not_null
+
+      - name: total_items_sold
+        description: "Total items sold in this category."
+        tests:
+          - not_null
+
+      - name: gross_revenue
+        description: "Sum of item prices (freight excluded)."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "Sum of price + freight per item."
+        tests:
+          - not_null
+
+      - name: avg_price
+        description: "Average item price in this category."
+
+      - name: revenue_share_pct
+        description: "% of total revenue this category represents."
+
+      - name: avg_review_score
+        description: "Average review score for orders containing items from this category."
+
+      - name: on_time_delivery_rate
+        description: "% of delivered orders in this category that arrived on or before estimated date."
+
+  - name: rpt_payment_mix
+    description: >
+      Payment method breakdown in long format for pie/donut charts.
+      One row per (payment_type, order_year, order_month, customer_state).
+      Use dimension=payment_type, metric=SUM(orders) for a donut chart in Superset.
+    columns:
+      - name: payment_type
+        description: "Part of composite PK. Values: credit_card, boleto, voucher, debit_card."
+        tests:
+          - not_null
+
+      - name: order_year
+        description: "Part of composite PK."
+        tests:
+          - not_null
+
+      - name: order_month
+        description: "Part of composite PK."
+        tests:
+          - not_null
+
+      - name: order_month_start
+        description: "First day of the month (DATE). Use as X-axis for time series charts in Superset."
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "Part of composite PK. 2-char Brazilian state abbreviation."
+        tests:
+          - not_null
+
+      - name: state_iso_3166
+        description: "ISO 3166-2 state code (e.g. BR-SP). Use with Superset Country Map chart."
+        tests:
+          - not_null
+
+      - name: orders
+        description: "Number of orders with this payment type in this bucket."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "Sum of total_revenue for orders in this bucket."
+
+      - name: avg_order_value
+        description: "Average order value (total_revenue / orders) in this bucket."
