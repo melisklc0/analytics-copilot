@@ -50,6 +50,12 @@ models:
       +materialized: table
       +schema: marts
       +tags: ["marts"]
+      ai:
+        +tags: ["marts", "ai"]
+      core:
+        +tags: ["marts", "core"]
+      dashboard:
+        +tags: ["marts", "dashboard"]
 
 # Project variables
 vars:

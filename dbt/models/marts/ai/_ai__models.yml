@@ -1,0 +1,362 @@
+version: 2
+
+models:
+  - name: mart_orders
+    description: >
+      AI layer mart for order-level questions. One row per order_id.
+      All filter dimensions (customer_state, payment_type, order_year, order_month)
+      are denormalized — AI writes only WHERE / GROUP BY / ORDER BY / LIMIT, no JOINs.
+      Use this table for questions about order volume, revenue, delivery performance,
+      payment methods, and review scores.
+    columns:
+      - name: order_id
+        description: "PK."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: "Person identifier (source: customer_unique_id via staging)."
+        tests:
+          - not_null
+
+      - name: customer_city
+        description: "Customer's city."
+
+      - name: customer_state
+        description: "Customer's state (2-char abbreviation). Filter dimension."
+        tests:
+          - not_null
+
+      - name: order_status
+        description: "Raw order status from source (e.g. delivered, shipped, canceled)."
+        tests:
+          - not_null
+
+      - name: is_delivered
+        description: "True when order_status = 'delivered'."
+        tests:
+          - not_null
+
+      - name: is_on_time
+        description: "True when delivered_date <= estimated_date. NULL for non-delivered orders."
+
+      - name: order_date
+        description: "Order purchase date (DATE). Filter dimension."
+        tests:
+          - not_null
+
+      - name: order_year
+        description: "Year extracted from order_date. Filter dimension."
+        tests:
+          - not_null
+
+      - name: order_month
+        description: "Month (1–12) extracted from order_date. Filter dimension."
+        tests:
+          - not_null
+
+      - name: total_items
+        description: "Number of items in the order."
+        tests:
+          - not_null
+
+      - name: gross_revenue
+        description: "Sum of item prices, freight excluded (BRL)."
+        tests:
+          - not_null
+
+      - name: total_freight
+        description: "Sum of freight values for all items in the order (BRL)."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "gross_revenue + total_freight (BRL)."
+        tests:
+          - not_null
+
+      - name: delivery_days
+        description: "Days from purchase to customer delivery. NULL for non-delivered orders."
+
+      - name: estimated_delivery_days
+        description: "Days from purchase to estimated delivery date."
+
+      - name: days_from_estimate
+        description: "Actual delivery minus estimated delivery in days. Positive = late, negative = early. NULL for non-delivered."
+
+      - name: payment_type
+        description: "Dominant payment method by value (credit_card, boleto, voucher, debit_card). Filter dimension."
+
+      - name: payment_installments
+        description: "Number of installments for the dominant payment type."
+
+      - name: review_score
+        description: "Customer review score (1–5). NULL if no review submitted."
+
+      - name: has_review
+        description: "True when a review exists for this order."
+        tests:
+          - not_null
+
+  - name: mart_customers
+    description: >
+      AI layer mart for customer lifecycle and LTV questions. One row per customer_id (person).
+      Segment label is pre-computed so AI can filter directly with WHERE customer_segment = 'loyal'.
+      Location is taken from the customer's most recent order.
+      Segment logic: new = 1 order, returning = 2–4 orders, loyal = 5+ orders.
+    columns:
+      - name: customer_id
+        description: "PK — stable person identifier (source: customer_unique_id)."
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_city
+        description: "City from the customer's most recent order."
+
+      - name: customer_state
+        description: "State from the customer's most recent order. Filter dimension."
+        tests:
+          - not_null
+
+      - name: first_order_date
+        description: "Date of the customer's first order."
+        tests:
+          - not_null
+
+      - name: last_order_date
+        description: "Date of the customer's most recent order."
+        tests:
+          - not_null
+
+      - name: total_orders
+        description: "Total number of distinct orders placed by this customer."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "Sum of total_revenue across all orders (BRL). Customer lifetime value."
+        tests:
+          - not_null
+
+      - name: avg_order_value
+        description: "Average order value (total_revenue / total_orders) in BRL."
+        tests:
+          - not_null
+
+      - name: avg_review_score
+        description: "Average review score across all reviewed orders (1–5). NULL if no reviews."
+
+      - name: customer_segment
+        description: "Segment label: new (1 order), returning (2–4 orders), loyal (5+ orders). Filter dimension."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['new', 'returning', 'loyal']
+
+  - name: mart_sellers
+    description: >
+      AI layer mart for seller performance questions. One row per seller_id.
+      Combines delivery reliability, customer satisfaction, and revenue in one table.
+      AI can filter by seller_state or apply threshold conditions on any metric column.
+    columns:
+      - name: seller_id
+        description: "PK."
+        tests:
+          - not_null
+          - unique
+
+      - name: seller_city
+        description: "Seller's city."
+
+      - name: seller_state
+        description: "Seller's state (2-char abbreviation). Filter dimension."
+        tests:
+          - not_null
+
+      - name: total_orders
+        description: "Number of distinct orders fulfilled by this seller."
+        tests:
+          - not_null
+
+      - name: distinct_customers
+        description: "Number of distinct customers served."
+        tests:
+          - not_null
+
+      - name: gross_revenue
+        description: "Sum of item prices (freight excluded) across all orders (BRL)."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "Sum of item_revenue (price + freight) across all orders (BRL)."
+        tests:
+          - not_null
+
+      - name: avg_review_score
+        description: "Average review score across all seller orders (1–5). NULL if no reviews."
+
+      - name: on_time_delivery_rate
+        description: "Share of delivered orders that arrived on or before the estimated date (0–1)."
+
+      - name: avg_delivery_days
+        description: "Average days from order purchase to customer delivery. NULL-safe: non-delivered orders excluded."
+
+      - name: first_sale_date
+        description: "Date of the seller's first order."
+        tests:
+          - not_null
+
+  - name: mart_product_categories
+    description: >
+      AI layer mart for category-level comparative analysis across all time.
+      One row per product_category_name_english.
+      For time-series or geography-sliced category analysis, use
+      mart_monthly_revenue_by_category instead.
+    columns:
+      - name: product_category_name_english
+        description: "PK — English product category name. Filter dimension."
+        tests:
+          - not_null
+          - unique
+
+      - name: total_products
+        description: "Number of distinct products in this category."
+        tests:
+          - not_null
+
+      - name: total_orders
+        description: "Number of distinct orders containing at least one item from this category."
+        tests:
+          - not_null
+
+      - name: total_items_sold
+        description: "Total items sold across all orders in this category."
+        tests:
+          - not_null
+
+      - name: gross_revenue
+        description: "Sum of item prices, freight excluded (BRL)."
+        tests:
+          - not_null
+
+      - name: avg_price
+        description: "Average item price in this category (BRL)."
+
+      - name: avg_freight_value
+        description: "Average freight value per item in this category (BRL)."
+
+      - name: avg_review_score
+        description: "Average review score for orders containing items from this category (1–5)."
+
+      - name: on_time_delivery_rate
+        description: "Share of delivered orders in this category that arrived on time (0–1)."
+
+  - name: mart_monthly_revenue_by_category
+    description: >
+      AI layer mart for time + geography + category trend analysis.
+      One row per (order_year, order_month, customer_state, product_category_name_english).
+      Use this instead of mart_orders when a question involves both a time/geography
+      dimension and a product category — mart_orders has no category column because
+      a single order can span multiple categories.
+    columns:
+      - name: order_year
+        description: "Part of composite PK. Filter dimension."
+        tests:
+          - not_null
+
+      - name: order_month
+        description: "Part of composite PK. Month (1–12). Filter dimension."
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "Part of composite PK. Customer state (2-char abbreviation). Filter dimension."
+        tests:
+          - not_null
+
+      - name: product_category_name_english
+        description: "Part of composite PK. English category name. Filter dimension."
+        tests:
+          - not_null
+
+      - name: orders
+        description: "Number of distinct orders containing items from this category in this bucket."
+        tests:
+          - not_null
+
+      - name: items_sold
+        description: "Total items sold in this category in this bucket."
+        tests:
+          - not_null
+
+      - name: gross_revenue
+        description: "Sum of item prices (freight excluded) in this bucket (BRL)."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "Sum of item_revenue (price + freight) in this bucket (BRL)."
+        tests:
+          - not_null
+
+      - name: avg_price
+        description: "Average item price in this bucket (BRL)."
+
+      - name: avg_review_score
+        description: "Average review score for orders in this bucket (1–5)."
+
+      - name: on_time_delivery_rate
+        description: "Share of delivered orders in this bucket that arrived on time (0–1)."
+
+  - name: mart_payment_behavior
+    description: >
+      AI layer mart for payment method behavior analysis.
+      One row per (payment_type, order_year, order_month, customer_state).
+      Pre-aggregated for common payment-focused queries. mart_orders can answer
+      the same questions with GROUP BY but this table is more explicit and faster
+      for questions scoped to a single payment method.
+    columns:
+      - name: payment_type
+        description: "Part of composite PK. Values: credit_card, boleto, voucher, debit_card. Filter dimension."
+        tests:
+          - not_null
+
+      - name: order_year
+        description: "Part of composite PK. Filter dimension."
+        tests:
+          - not_null
+
+      - name: order_month
+        description: "Part of composite PK. Month (1–12). Filter dimension."
+        tests:
+          - not_null
+
+      - name: customer_state
+        description: "Part of composite PK. Customer state (2-char abbreviation). Filter dimension."
+        tests:
+          - not_null
+
+      - name: orders
+        description: "Number of distinct orders using this payment type in this bucket."
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: "Sum of order total_revenue in this bucket (BRL)."
+        tests:
+          - not_null
+
+      - name: avg_order_value
+        description: "Average order value (total_revenue / orders) in this bucket (BRL)."
+        tests:
+          - not_null
+
+      - name: avg_installments
+        description: "Average number of installments for orders in this bucket."
+
+      - name: avg_review_score
+        description: "Average review score for orders in this bucket (1–5)."
