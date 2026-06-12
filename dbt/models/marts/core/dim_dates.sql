@@ -11,7 +11,7 @@ GRAIN: one row per calendar date — range derived from min/max order_purchase_t
 in the source orders table, so no hardcoded dates.
 
 SOURCES:
-- raw.orders: provides the actual date range of the dataset
+- stg__orders: provides the actual date range of the dataset
 - generate_series: PostgreSQL native, produces one row per day
 
 USAGE:
@@ -23,7 +23,7 @@ with date_range as (
     select
         min(order_purchase_timestamp)::date as start_date,
         max(order_purchase_timestamp)::date as end_date
-    from {{ source('raw', 'orders') }}
+    from {{ ref('stg__orders') }}
 )
 
 select
