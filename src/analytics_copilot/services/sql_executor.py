@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import re
 import time
-from dataclasses import dataclass
 from typing import Any
 
 import psycopg
@@ -11,16 +10,9 @@ import psycopg.rows
 
 from analytics_copilot.core.config import Settings, get_settings
 from analytics_copilot.core.exceptions import QueryTimeoutError, SQLExecutionError
+from analytics_copilot.services.models import QueryResult
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class QueryResult:
-    rows: list[dict[str, Any]]
-    row_count: int
-    elapsed_s: float
-    sql: str
 
 
 def _apply_limit(sql: str, max_rows: int) -> str:

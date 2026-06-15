@@ -2,12 +2,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from analytics_copilot.services.manifest_parser import (
-    ColumnMeta,
-    ManifestParser,
-    ModelMeta,
-)
-from analytics_copilot.services.sql_validator import SQLValidator, ValidationResult
+from analytics_copilot.services.manifest_parser import ManifestParser
+from analytics_copilot.services.models import MartColumn, MartModel
+from analytics_copilot.services.models import ValidationResult
+from analytics_copilot.services.sql_validator import SQLValidator
 
 
 # ---------------------------------------------------------------------------
@@ -15,43 +13,43 @@ from analytics_copilot.services.sql_validator import SQLValidator, ValidationRes
 # ---------------------------------------------------------------------------
 
 
-def _make_manifest(models: list[ModelMeta]) -> ManifestParser:
+def _make_manifest(models: list[MartModel]) -> ManifestParser:
     mock = MagicMock(spec=ManifestParser)
     mock.models = {m.name: m for m in models}
     mock.get_all_models.return_value = models
     return mock  # type: ignore[return-value]
 
 
-CUSTOMERS_MODEL = ModelMeta(
+CUSTOMERS_MODEL = MartModel(
     name="mart_customers",
     relation="main_marts.mart_customers",
     description="Customer lifecycle metrics",
     columns=[
-        ColumnMeta(
+        MartColumn(
             name="customer_id", description="", data_type="text", filterable=False
         ),
-        ColumnMeta(
+        MartColumn(
             name="customer_state", description="", data_type="text", filterable=True
         ),
-        ColumnMeta(
+        MartColumn(
             name="total_revenue", description="", data_type="numeric", filterable=False
         ),
-        ColumnMeta(
+        MartColumn(
             name="total_orders", description="", data_type="integer", filterable=False
         ),
     ],
 )
 
-ORDERS_MODEL = ModelMeta(
+ORDERS_MODEL = MartModel(
     name="mart_orders",
     relation="main_marts.mart_orders",
     description="Order details",
     columns=[
-        ColumnMeta(name="order_id", description="", data_type="text", filterable=False),
-        ColumnMeta(
+        MartColumn(name="order_id", description="", data_type="text", filterable=False),
+        MartColumn(
             name="order_status", description="", data_type="text", filterable=True
         ),
-        ColumnMeta(
+        MartColumn(
             name="total_revenue", description="", data_type="numeric", filterable=False
         ),
     ],
@@ -135,12 +133,12 @@ class TestAggregationGuard:
         """sqlglot parses AST nodes — column names containing keywords are safe."""
         manifest = _make_manifest(
             [
-                ModelMeta(
+                MartModel(
                     name="mart_orders",
                     relation="main_marts.mart_orders",
                     description="",
                     columns=[
-                        ColumnMeta(
+                        MartColumn(
                             name="join_date",
                             description="",
                             data_type="date",

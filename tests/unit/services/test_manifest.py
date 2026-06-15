@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from analytics_copilot.services.manifest_parser import ManifestParser, ModelMeta
+from analytics_copilot.services.manifest_parser import ManifestParser
+from analytics_copilot.services.models import MartModel
 
 
 FIXTURE_PATH = Path(__file__).parent.parent.parent / "fixtures" / "manifest_sample.json"
@@ -84,7 +85,7 @@ class TestManifestLoading:
 class TestGetAllModels:
     def test_returns_list_of_model_meta(self, parser: ManifestParser) -> None:
         models = parser.get_all_models()
-        assert all(isinstance(m, ModelMeta) for m in models)
+        assert all(isinstance(m, MartModel) for m in models)
 
     def test_returns_correct_count(self, parser: ManifestParser) -> None:
         assert len(parser.get_all_models()) == 2

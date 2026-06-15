@@ -1,23 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import sqlglot
 import sqlglot.expressions as exp
 
-from analytics_copilot.services.manifest_parser import ManifestParser, ModelMeta
+from analytics_copilot.services.manifest_parser import ManifestParser
+from analytics_copilot.services.models import MartModel, ValidationResult
 
 _FORBIDDEN_AGGREGATIONS: list[tuple[type[exp.Expression], str]] = [
     (exp.Sum, "SUM()"),
     (exp.Count, "COUNT()"),
     (exp.Avg, "AVG()"),
 ]
-
-
-@dataclass
-class ValidationResult:
-    valid: bool
-    error: str | None = None
 
 
 class SQLValidator:
@@ -113,10 +106,10 @@ class SQLValidator:
             )
         return None
 
-    def _resolve_models(self, tree: exp.Select) -> list[ModelMeta]:
+    def _resolve_models(self, tree: exp.Select) -> list[MartModel]:
         by_name = self._manifest.models
         by_relation = {m.relation: m for m in self._manifest.get_all_models()}
-        models: list[ModelMeta] = []
+        models: list[MartModel] = []
         for table in tree.find_all(exp.Table):
             if not table.name:
                 continue

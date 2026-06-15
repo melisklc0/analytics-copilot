@@ -7,11 +7,8 @@ import pytest
 
 from analytics_copilot.core.config import Settings
 from analytics_copilot.core.exceptions import QueryTimeoutError, SQLExecutionError
-from analytics_copilot.services.sql_executor import (
-    SQLExecutor,
-    QueryResult,
-    _apply_limit,
-)
+from analytics_copilot.services.models import QueryResult
+from analytics_copilot.services.sql_executor import SQLExecutor, _apply_limit
 
 
 @pytest.fixture()
