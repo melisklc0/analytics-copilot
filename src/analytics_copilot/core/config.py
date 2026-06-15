@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     langfuse_public_key: SecretStr | None = None
     langfuse_secret_key: SecretStr | None = None
-    langfuse_host: str = "https://cloud.langfuse.com"
+    langfuse_host: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
         env_file=pathlib.Path(".env"),
