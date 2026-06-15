@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     postgres_ro_user: str = "analyst_ro"
     postgres_ro_password: SecretStr = SecretStr("analyst_ro")
 
+    # SQL executor limits
+    sql_row_limit: int = 500
+    sql_statement_timeout_ms: int = 10_000
+
     openai_api_key: SecretStr | None = None
 
     # Legacy / reference — kept from OpenRAG skeleton

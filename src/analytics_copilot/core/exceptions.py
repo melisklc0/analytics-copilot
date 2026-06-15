@@ -37,3 +37,27 @@ class DocumentTextExtractionError(ApplicationError):
 
     def __init__(self, message: str = "Could not extract text from document") -> None:
         super().__init__(message)
+
+
+class SQLValidationError(ApplicationError):
+    """Raised when generated SQL fails validation checks."""
+
+    code = "sql_validation_error"
+    status_code = 422
+
+
+class SQLExecutionError(ApplicationError):
+    """Raised when PostgreSQL rejects or fails to execute a query."""
+
+    code = "sql_execution_error"
+    status_code = 500
+
+
+class QueryTimeoutError(ApplicationError):
+    """Raised when a query exceeds the statement timeout limit."""
+
+    code = "query_timeout"
+    status_code = 504
+
+    def __init__(self, timeout_s: int) -> None:
+        super().__init__(f"Query exceeded the {timeout_s}s timeout limit")

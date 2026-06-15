@@ -3,26 +3,11 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import dataclass, field
 from pathlib import Path
 
+from analytics_copilot.services.models import MartColumn, MartModel
+
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class ColumnMeta:
-    name: str
-    description: str
-    data_type: str
-    filterable: bool
-
-
-@dataclass
-class ModelMeta:
-    name: str
-    relation: str  # schema.table — ready to use in SQL
-    description: str
-    columns: list[ColumnMeta] = field(default_factory=list)
 
 
 def _parse_relation(relation_name: str) -> str:
@@ -44,15 +29,15 @@ class ManifestParser:
 
     def __init__(self, manifest_path: Path) -> None:
         self._path = manifest_path
-        self._models: dict[str, ModelMeta] | None = None
+        self._models: dict[str, MartModel] | None = None
 
-    def _load(self) -> dict[str, ModelMeta]:
+    def _load(self) -> dict[str, MartModel]:
         logger.debug("loading manifest", extra={"path": str(self._path)})
 
         with open(self._path, encoding="utf-8") as fh:
             raw = json.load(fh)
 
-        result: dict[str, ModelMeta] = {}
+        result: dict[str, MartModel] = {}
         nodes = raw.get("nodes", {})
         if not isinstance(nodes, dict):
             logger.warning(
@@ -76,13 +61,13 @@ class ManifestParser:
                 )
                 continue
 
-            columns: list[ColumnMeta] = []
+            columns: list[MartColumn] = []
             for col in node.get("columns", {}).values():
                 if not isinstance(col, dict):
                     continue
                 meta = col.get("meta") or {}
                 columns.append(
-                    ColumnMeta(
+                    MartColumn(
                         name=str(col.get("name", "")),
                         description=str(col.get("description", "")),
                         data_type=str(col.get("data_type", "") or "text"),
@@ -92,7 +77,7 @@ class ManifestParser:
 
             name = str(node.get("name", ""))
             relation_name = str(node.get("relation_name", ""))
-            result[name] = ModelMeta(
+            result[name] = MartModel(
                 name=name,
                 relation=_parse_relation(relation_name) if relation_name else name,
                 description=str(node.get("description", "")).strip(),
@@ -114,12 +99,12 @@ class ManifestParser:
         return result
 
     @property
-    def models(self) -> dict[str, ModelMeta]:
+    def models(self) -> dict[str, MartModel]:
         if self._models is None:
             self._models = self._load()
         return self._models
 
-    def get_all_models(self) -> list[ModelMeta]:
+    def get_all_models(self) -> list[MartModel]:
         """Return all AI-mart models — used by Schema Selector for relevance ranking."""
         return list(self.models.values())
 
