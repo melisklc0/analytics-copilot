@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "dbt_schema_version": "https://schemas.getdbt.com/dbt/manifest/v12/manifest.json",
+    "dbt_version": "1.9.0",
+    "generated_at": "2025-01-01T00:00:00.000000Z",
+    "invocation_id": "test-invocation-id"
+  },
+  "nodes": {
+    "model.analytics_copilot.mart_customers": {
+      "unique_id": "model.analytics_copilot.mart_customers",
+      "resource_type": "model",
+      "name": "mart_customers",
+      "description": "AI layer mart for customer lifecycle and LTV questions. One row per customer_id (person). Segment label is pre-computed so AI can filter directly with WHERE customer_segment = 'loyal'.",
+      "tags": ["ai", "mart", "marts"],
+      "relation_name": "\"analytics_copilot\".\"main_marts\".\"mart_customers\"",
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "description": "PK — stable person identifier.",
+          "data_type": "text",
+          "meta": {"filterable": false}
+        },
+        "customer_state": {
+          "name": "customer_state",
+          "description": "State from the customer's most recent order. Filter dimension.",
+          "data_type": "text",
+          "meta": {"filterable": true}
+        },
+        "total_orders": {
+          "name": "total_orders",
+          "description": "Total number of distinct orders placed by this customer.",
+          "data_type": "integer",
+          "meta": {"filterable": false}
+        },
+        "total_revenue": {
+          "name": "total_revenue",
+          "description": "Sum of total_revenue across all orders (BRL). Customer lifetime value.",
+          "data_type": "numeric",
+          "meta": {"filterable": false}
+        },
+        "customer_segment": {
+          "name": "customer_segment",
+          "description": "Segment label. Values: new (1 order), returning (2–3 orders), loyal (4+ orders). Filter dimension.",
+          "data_type": "text",
+          "meta": {"filterable": true, "enum": ["new", "returning", "loyal"]}
+        }
+      }
+    },
+    "model.analytics_copilot.mart_orders": {
+      "unique_id": "model.analytics_copilot.mart_orders",
+      "resource_type": "model",
+      "name": "mart_orders",
+      "description": "AI layer mart for order-level questions. One row per order_id.",
+      "tags": ["ai", "mart", "marts"],
+      "relation_name": "\"analytics_copilot\".\"main_marts\".\"mart_orders\"",
+      "columns": {
+        "order_id": {
+          "name": "order_id",
+          "description": "PK.",
+          "data_type": "text",
+          "meta": {"filterable": false}
+        },
+        "order_year": {
+          "name": "order_year",
+          "description": "Year extracted from order_date. Filter dimension.",
+          "data_type": "integer",
+          "meta": {"filterable": true}
+        },
+        "total_revenue": {
+          "name": "total_revenue",
+          "description": "gross_revenue + total_freight (BRL).",
+          "data_type": "numeric",
+          "meta": {"filterable": false}
+        }
+      }
+    },
+    "model.analytics_copilot.stg__customers": {
+      "unique_id": "model.analytics_copilot.stg__customers",
+      "resource_type": "model",
+      "name": "stg__customers",
+      "description": "Staging model — not an AI mart.",
+      "tags": ["staging"],
+      "relation_name": "\"analytics_copilot\".\"main_staging\".\"stg__customers\"",
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "description": "Customer ID.",
+          "data_type": "text",
+          "meta": {}
+        }
+      }
+    }
+  },
+  "sources": {
+    "source.analytics_copilot.raw.orders": {
+      "unique_id": "source.analytics_copilot.raw.orders",
+      "resource_type": "source",
+      "name": "orders"
+    }
+  }
+}

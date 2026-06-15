@@ -13,6 +13,9 @@ class Settings(BaseSettings):
 
     core_api_port: int = 8090
 
+    # dbt — path to manifest.json produced by `dbt docs generate`
+    dbt_manifest_path: pathlib.Path = pathlib.Path("dbt/target/manifest.json")
+
     # PostgreSQL
     postgres_host: str = "localhost"
     postgres_port: int = 5433
