@@ -32,7 +32,7 @@ def _apply_limit(sql: str, max_rows: int) -> str:
 
 
 class SQLExecutor:
-    """Async, read-only SQL executor backed by the analyst_ro PostgreSQL role."""
+    """Async, read-only SQL executor backed by the configured read-only PostgreSQL role."""
 
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or get_settings()
@@ -70,7 +70,7 @@ class SQLExecutor:
             raise QueryTimeoutError(
                 self._settings.sql_statement_timeout_ms // 1000
             ) from exc
-        except (psycopg.OperationalError, psycopg.ProgrammingError) as exc:
+        except psycopg.DatabaseError as exc:
             raise SQLExecutionError(str(exc)) from exc
 
         elapsed = round(time.monotonic() - start, 3)
