@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import cast
 
 import sqlglot
@@ -8,6 +9,8 @@ import sqlglot.expressions as exp
 from analytics_copilot.core.exceptions import SQLValidationError
 from analytics_copilot.services.manifest_parser import ManifestParser
 from analytics_copilot.services.models import MartModel, ValidationResult
+
+logger = logging.getLogger(__name__)
 
 _FORBIDDEN_EXPRESSIONS: tuple[type[exp.Expression], ...] = (
     exp.Group,
@@ -42,8 +45,10 @@ class SQLValidator:
             models = self._resolve_tables(select)
             self._check_columns(select, models)
         except SQLValidationError as exc:
+            logger.warning("sql validation failed", extra={"error": str(exc)})
             return ValidationResult(valid=False, error=str(exc))
 
+        logger.info("sql validated")
         return ValidationResult(valid=True)
 
     def _check_write_guard(self, tree: exp.Expression) -> exp.Select:

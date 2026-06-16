@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
-import re
 import time
 from typing import Any
 
 import psycopg
 import psycopg.rows
+import sqlglot
+import sqlglot.expressions as exp
 
 from analytics_copilot.core.config import Settings, get_settings
 from analytics_copilot.core.exceptions import QueryTimeoutError, SQLExecutionError
@@ -16,23 +17,18 @@ logger = logging.getLogger(__name__)
 
 
 def _apply_limit(sql: str, max_rows: int) -> str:
-    """Enforce a maximum row cap. Replaces existing LIMIT if it exceeds max_rows."""
-    stripped = sql.rstrip().rstrip(";")
-    m = re.search(r"\bLIMIT\s+(\d+)\b", stripped, re.IGNORECASE)
-    if m:
-        if int(m.group(1)) > max_rows:
-            return re.sub(
-                r"\bLIMIT\s+\d+\b",
-                f"LIMIT {max_rows}",
-                stripped,
-                flags=re.IGNORECASE,
-            )
-        return stripped
-    return f"{stripped}\nLIMIT {max_rows}"
+    tree = sqlglot.parse_one(sql, dialect="postgres")
+    limit_node = tree.args.get("limit")
+    if limit_node:
+        limit_expr = limit_node.args.get("expression")
+        if isinstance(limit_expr, exp.Literal) and int(limit_expr.this) <= max_rows:
+            return tree.sql(dialect="postgres")
+    tree.args["limit"] = exp.Limit(expression=exp.Literal.number(max_rows))
+    return tree.sql(dialect="postgres")
 
 
 class SQLExecutor:
-    """Async, read-only SQL executor backed by the analyst_ro PostgreSQL role."""
+    """Async, read-only SQL executor backed by the configured read-only PostgreSQL role."""
 
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or get_settings()
@@ -67,10 +63,8 @@ class SQLExecutor:
                     await cur.execute(limited_sql)
                     rows: list[dict[str, Any]] = await cur.fetchall()
         except psycopg.errors.QueryCanceled as exc:
-            raise QueryTimeoutError(
-                self._settings.sql_statement_timeout_ms // 1000
-            ) from exc
-        except (psycopg.OperationalError, psycopg.ProgrammingError) as exc:
+            raise QueryTimeoutError(self._settings.sql_statement_timeout_ms) from exc
+        except psycopg.DatabaseError as exc:
             raise SQLExecutionError(str(exc)) from exc
 
         elapsed = round(time.monotonic() - start, 3)
