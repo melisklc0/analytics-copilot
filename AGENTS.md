@@ -100,6 +100,7 @@ scripts/
 - Keep comments, docstrings, and prompts in English.
 - Keep prompt templates in `prompts/` YAML files — never hardcode in Python.
 - Mock LLM, PostgreSQL, Redis, Langfuse, and network calls in unit tests.
+- **Follow framework-idiomatic patterns. No wrapper hacks.** Use the standard pattern each framework provides — don't invent factory closures or decorator workarounds when the framework already has a clean answer. 
 - Update `.env.example` and docs when adding required config.
 - **Every new service, node, validator, or endpoint gets a test.** No code ships without a corresponding test file in `tests/`. Mock external dependencies; never hit real DBs or APIs in unit tests.
 - **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run mypy src/analytics_copilot/ && uv run pytest`.

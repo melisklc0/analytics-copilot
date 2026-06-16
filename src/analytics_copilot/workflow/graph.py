@@ -4,12 +4,16 @@ from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 
+from analytics_copilot.core.config import get_settings
+from analytics_copilot.services.manifest_parser import ManifestParser
+from analytics_copilot.services.sql_executor import SQLExecutor
+from analytics_copilot.services.sql_validator import SQLValidator
 from analytics_copilot.workflow.nodes import (
-    error_handler_node,
-    result_formatter_node,
-    sql_executor_node,
-    sql_generator_node,
-    sql_validator_node,
+    ErrorHandlerNode,
+    ResultFormatterNode,
+    SQLExecutorNode,
+    SQLGeneratorNode,
+    SQLValidatorNode,
 )
 from analytics_copilot.workflow.state import WorkflowState
 
@@ -28,14 +32,22 @@ def _route_after_executor(state: WorkflowState) -> str:
     return "result_formatter"
 
 
-def build_graph() -> Any:
+def build_graph(
+    manifest: ManifestParser | None = None,
+    executor: SQLExecutor | None = None,
+) -> Any:
+    settings = get_settings()
+    resolved_manifest = manifest or ManifestParser(settings.dbt_manifest_path)
+    resolved_executor = executor or SQLExecutor(settings)
+    validator = SQLValidator(resolved_manifest)
+
     builder = StateGraph(WorkflowState)
 
-    builder.add_node("sql_generator", sql_generator_node)
-    builder.add_node("sql_validator", sql_validator_node)
-    builder.add_node("sql_executor", sql_executor_node)
-    builder.add_node("result_formatter", result_formatter_node)
-    builder.add_node("error_handler", error_handler_node)
+    builder.add_node("sql_generator", SQLGeneratorNode())
+    builder.add_node("sql_validator", SQLValidatorNode(validator))
+    builder.add_node("sql_executor", SQLExecutorNode(resolved_executor))
+    builder.add_node("result_formatter", ResultFormatterNode())
+    builder.add_node("error_handler", ErrorHandlerNode())
 
     builder.add_edge(START, "sql_generator")
     builder.add_edge("sql_generator", "sql_validator")
