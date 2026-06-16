@@ -6,11 +6,13 @@ import sqlglot.expressions as exp
 from analytics_copilot.services.manifest_parser import ManifestParser
 from analytics_copilot.services.models import MartModel, ValidationResult
 
-_FORBIDDEN_AGGREGATIONS: list[tuple[type[exp.Expression], str]] = [
-    (exp.Sum, "SUM()"),
-    (exp.Count, "COUNT()"),
-    (exp.Avg, "AVG()"),
-]
+_FORBIDDEN_EXPRESSIONS: tuple[type[exp.Expression], ...] = (
+    exp.Group,
+    exp.Join,
+    exp.Sum,
+    exp.Count,
+    exp.Avg,
+)
 
 
 class SQLValidator:
@@ -35,26 +37,13 @@ class SQLValidator:
             stmt = type(tree).__name__.upper()
             return ValidationResult(
                 valid=False,
-                error=f"Only SELECT is permitted; got {stmt}.",
+                error=f"{stmt} action is not permitted.",
             )
 
-        if tree.find(exp.Group):
-            return ValidationResult(
-                valid=False,
-                error="GROUP BY is not allowed. dbt mart models pre-compute aggregations.",
-            )
-
-        if tree.find(exp.Join):
-            return ValidationResult(
-                valid=False,
-                error="JOIN is not allowed. Query mart tables directly.",
-            )
-
-        for agg_type, label in _FORBIDDEN_AGGREGATIONS:
-            if tree.find(agg_type):
+        for node_type in _FORBIDDEN_EXPRESSIONS:
+            if tree.find(node_type):
                 return ValidationResult(
-                    valid=False,
-                    error=f"{label} is not allowed. dbt mart models pre-compute aggregations.",
+                    valid=False, error=f"{node_type.__name__.upper()} is not permitted."
                 )
 
         table_error = self._check_tables(tree)
