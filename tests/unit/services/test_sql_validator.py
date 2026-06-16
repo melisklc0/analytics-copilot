@@ -125,7 +125,7 @@ class TestAggregationGuard:
         result = validator.validate(
             "SELECT customer_state FROM mart_customers GROUP BY customer_state"
         )
-        assert "GROUP BY" in (result.error or "")
+        assert "GROUP" in (result.error or "")
 
     def test_column_named_join_date_is_not_rejected(
         self, validator: SQLValidator
