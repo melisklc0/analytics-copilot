@@ -5,6 +5,9 @@ You are working on **Analytics Copilot**: a natural language analytics interface
 The system translates plain-English questions into validated SQL queries against dbt mart tables and returns structured results. The AI layer does not aggregate, join, or compute — dbt handles all of that in mart models. The AI generates `SELECT ... FROM mart.* WHERE ... ORDER BY ... LIMIT ...` queries only.
 
 Target vision and roadmap: `docs/VIZYON.md`.
+Dbt architecture and modeling rules: `docs/dbt-architecture.md`.
+Langgraph workflow design: `docs/workflow-design.md`.
+
 
 ## Scope
 

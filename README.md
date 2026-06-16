@@ -217,7 +217,7 @@ cp .env.example .env          # add your OpenAI API key
 
 make docker-up                # PostgreSQL + API + optional Langfuse/Superset
 
-# Download the Olist dataset from Kaggle and place CSVs under data/raw/
+# Download the Olist dataset from Kaggle and place CSVs under data/raw/olist-dataset/
 # https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
 
 make seed                     # load Olist data into PostgreSQL
