@@ -1,4 +1,4 @@
-.PHONY: test run seed dbt-run dbt-test dbt-docs docker-build docker-up docker-postgres
+.PHONY: test run seed dbt-pipeline dbt-run dbt-test dbt-docs docker-build docker-up docker-postgres
 
 test:
 	uv run pytest
@@ -8,6 +8,9 @@ run:
 
 seed:
 	uv run python scripts/load_olist.py
+
+dbt-pipeline:
+	cd dbt && uv run dbt deps && uv run dbt run && uv run dbt test && uv run dbt docs generate
 
 dbt-run:
 	cd dbt && uv run dbt run
