@@ -5,6 +5,9 @@ You are working on **Analytics Copilot**: a natural language analytics interface
 The system translates plain-English questions into validated SQL queries against dbt mart tables and returns structured results. The AI layer does not aggregate, join, or compute — dbt handles all of that in mart models. The AI generates `SELECT ... FROM mart.* WHERE ... ORDER BY ... LIMIT ...` queries only.
 
 Target vision and roadmap: `docs/VIZYON.md`.
+Dbt architecture and modeling rules: `docs/dbt-architecture.md`.
+Langgraph workflow design: `docs/workflow-design.md`.
+
 
 ## Scope
 
@@ -97,6 +100,7 @@ scripts/
 - Keep comments, docstrings, and prompts in English.
 - Keep prompt templates in `prompts/` YAML files — never hardcode in Python.
 - Mock LLM, PostgreSQL, Redis, Langfuse, and network calls in unit tests.
+- **Follow framework-idiomatic patterns. No wrapper hacks.** Use the standard pattern each framework provides — don't invent factory closures or decorator workarounds when the framework already has a clean answer. 
 - Update `.env.example` and docs when adding required config.
 - **Every new service, node, validator, or endpoint gets a test.** No code ships without a corresponding test file in `tests/`. Mock external dependencies; never hit real DBs or APIs in unit tests.
 - **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run mypy src/analytics_copilot/ && uv run pytest`.
