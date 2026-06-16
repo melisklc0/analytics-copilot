@@ -59,5 +59,5 @@ class QueryTimeoutError(ApplicationError):
     code = "query_timeout"
     status_code = 504
 
-    def __init__(self, timeout_s: int) -> None:
-        super().__init__(f"Query exceeded the {timeout_s}s timeout limit")
+    def __init__(self, timeout_ms: int) -> None:
+        super().__init__(f"Query exceeded the {timeout_ms // 1000}s timeout limit")
