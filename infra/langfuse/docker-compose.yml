@@ -1,4 +1,38 @@
 services:
+  langfuse-worker:
+    image: langfuse/langfuse-worker:3
+    container_name: analytics_copilot_langfuse_worker
+    depends_on:
+      langfuse-postgres:
+        condition: service_healthy
+      langfuse-clickhouse:
+        condition: service_healthy
+      langfuse-minio:
+        condition: service_healthy
+      langfuse-redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://langfuse:${LANGFUSE_POSTGRES_PASSWORD:-langfuse}@langfuse-postgres:5432/langfuse"
+      CLICKHOUSE_MIGRATION_URL: "clickhouse://${LANGFUSE_CLICKHOUSE_USER:-default}:${LANGFUSE_CLICKHOUSE_PASSWORD:-langfuse}@langfuse-clickhouse:9000"
+      CLICKHOUSE_URL: "http://langfuse-clickhouse:8123"
+      CLICKHOUSE_USER: "${LANGFUSE_CLICKHOUSE_USER:-default}"
+      CLICKHOUSE_PASSWORD: "${LANGFUSE_CLICKHOUSE_PASSWORD:-langfuse}"
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: "langfuse"
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://langfuse-minio:9000"
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: "${LANGFUSE_MINIO_ACCESS_KEY:-minio}"
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: "${LANGFUSE_MINIO_SECRET_KEY:-miniosecret}"
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: "auto"
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      REDIS_HOST: "langfuse-redis"
+      REDIS_PORT: "6379"
+      REDIS_AUTH: "${LANGFUSE_REDIS_AUTH:-langfuse}"
+
+      SALT: "${LANGFUSE_SALT:-langfuse-dev-salt-change-in-prod}"
+    networks:
+      - analytics-copilot-network
+    restart: unless-stopped
+
   langfuse-web:
     image: langfuse/langfuse:3
     container_name: analytics_copilot_langfuse
@@ -8,6 +42,8 @@ services:
       langfuse-clickhouse:
         condition: service_healthy
       langfuse-minio:
+        condition: service_healthy
+      langfuse-redis:
         condition: service_healthy
     ports:
       - "${LANGFUSE_PORT:-3000}:3000"
@@ -35,6 +71,10 @@ services:
       LANGFUSE_INIT_PROJECT_NAME: "Analytics Copilot"
       LANGFUSE_INIT_USER_EMAIL: "${LANGFUSE_INIT_USER_EMAIL:-admin@analytics-copilot.local}"
       LANGFUSE_INIT_USER_PASSWORD: "${LANGFUSE_INIT_USER_PASSWORD:-copilotadmin123.}"
+      REDIS_HOST: "langfuse-redis"
+      REDIS_PORT: "6379"
+      REDIS_AUTH: "${LANGFUSE_REDIS_AUTH:-langfuse}"
+
     networks:
       - analytics-copilot-network
     healthcheck:
@@ -96,6 +136,19 @@ services:
       "
     networks:
       - analytics-copilot-network
+
+  langfuse-redis:
+    image: redis:7-alpine
+    container_name: analytics_copilot_langfuse_redis
+    command: redis-server --requirepass "${LANGFUSE_REDIS_AUTH:-langfuse}"
+    networks:
+      - analytics-copilot-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   langfuse-clickhouse:
     image: clickhouse/clickhouse-server:24.12-alpine

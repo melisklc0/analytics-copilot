@@ -56,6 +56,9 @@ def _make_node(
     return node, captured
 
 
+_EMPTY_CONFIG: dict[str, Any] = {}
+
+
 def _base_state(**overrides: Any) -> dict[str, Any]:
     state: dict[str, Any] = {
         "question": "What are the top 10 customers?",
@@ -77,7 +80,7 @@ def test_generates_sql_from_question(
 ) -> None:
     expected = "SELECT customer_id FROM mart.mart_customers LIMIT 10"
     node, _ = _make_node(mock_manifest, prompts_dir, sql=expected)
-    result = asyncio.run(node(_base_state()))
+    result = asyncio.run(node(_base_state(), _EMPTY_CONFIG))
     assert result["sql"] == expected
     assert result.get("error") is None
 
@@ -86,7 +89,7 @@ def test_no_retry_count_increment_on_first_call(
     mock_manifest: MagicMock, prompts_dir: pathlib.Path
 ) -> None:
     node, _ = _make_node(mock_manifest, prompts_dir)
-    result = asyncio.run(node(_base_state()))
+    result = asyncio.run(node(_base_state(), _EMPTY_CONFIG))
     assert "retry_count" not in result
 
 
@@ -98,7 +101,7 @@ def test_increments_retry_count_on_validation_error(
         validation_error="Table 'foo' is not a known AI mart model.",
         retry_count=0,
     )
-    result = asyncio.run(node(state))
+    result = asyncio.run(node(state, _EMPTY_CONFIG))
     assert result["retry_count"] == 1
 
 
@@ -107,7 +110,7 @@ def test_retry_note_included_in_prompt_on_validation_error(
 ) -> None:
     error_msg = "Table 'foo' is not a known AI mart model."
     node, captured = _make_node(mock_manifest, prompts_dir)
-    asyncio.run(node(_base_state(validation_error=error_msg)))
+    asyncio.run(node(_base_state(validation_error=error_msg), _EMPTY_CONFIG))
     assert len(captured) == 1
     assert error_msg in str(captured[0])
 
@@ -116,7 +119,7 @@ def test_no_retry_note_when_no_validation_error(
     mock_manifest: MagicMock, prompts_dir: pathlib.Path
 ) -> None:
     node, captured = _make_node(mock_manifest, prompts_dir)
-    asyncio.run(node(_base_state()))
+    asyncio.run(node(_base_state(), _EMPTY_CONFIG))
     assert len(captured) == 1
     assert "Previous SQL was rejected" not in str(captured[0])
 
@@ -129,7 +132,7 @@ def test_sets_error_on_llm_exception(
         prompts_dir,
         side_effect=Exception("API connection error"),
     )
-    result = asyncio.run(node(_base_state()))
+    result = asyncio.run(node(_base_state(), _EMPTY_CONFIG))
     assert result["sql"] is None
     assert "API connection error" in result["error"]
 
@@ -139,7 +142,7 @@ def test_reuses_mart_context_from_state(
 ) -> None:
     node, _ = _make_node(mock_manifest, prompts_dir)
     cached_context = "## cached mart context"
-    result = asyncio.run(node(_base_state(mart_context=cached_context)))
+    result = asyncio.run(node(_base_state(mart_context=cached_context), _EMPTY_CONFIG))
     assert result["mart_context"] == cached_context
     mock_manifest.get_context.assert_not_called()
 
@@ -148,7 +151,7 @@ def test_builds_mart_context_from_manifest_when_none(
     mock_manifest: MagicMock, prompts_dir: pathlib.Path
 ) -> None:
     node, _ = _make_node(mock_manifest, prompts_dir)
-    result = asyncio.run(node(_base_state()))
+    result = asyncio.run(node(_base_state(), _EMPTY_CONFIG))
     assert result["mart_context"] is not None
     mock_manifest.get_all_models.assert_called_once()
     mock_manifest.get_context.assert_called_once()

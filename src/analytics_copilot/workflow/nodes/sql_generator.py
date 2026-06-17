@@ -6,6 +6,7 @@ from typing import Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableConfig
 
 from analytics_copilot.core.exceptions import SQLGenerationError
 from analytics_copilot.services.manifest_parser import ManifestParser
@@ -33,7 +34,9 @@ class SQLGeneratorNode:
         )
         self._chain: Any = prompt | llm.with_structured_output(SQLOutput)
 
-    async def __call__(self, state: WorkflowState) -> dict[str, Any]:
+    async def __call__(
+        self, state: WorkflowState, config: RunnableConfig
+    ) -> dict[str, Any]:
         mart_context: str = state["mart_context"] or self._build_mart_context()
         validation_error = state["validation_error"]
 
@@ -54,7 +57,8 @@ class SQLGeneratorNode:
                     "question": state["question"],
                     "mart_context": mart_context,
                     "retry_note": retry_note,
-                }
+                },
+                config,
             )
             updates["sql"] = result.sql
             updates["error"] = None
