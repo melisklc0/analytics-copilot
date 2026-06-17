@@ -10,6 +10,34 @@ from typing import override
 
 from analytics_copilot.core.config import get_settings
 
+LOG_RECORD_BUILTIN_ATTRS: frozenset[str] = frozenset(
+    {
+        "args",
+        "asctime",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "levelname",
+        "levelno",
+        "lineno",
+        "module",
+        "msecs",
+        "message",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "stack_info",
+        "thread",
+        "threadName",
+        "taskName",
+    }
+)
+
 
 class QueueHandlerInit:
     """Start the QueueListener once, including reload and multi-import scenarios."""
@@ -52,15 +80,9 @@ class CustomQueueHandler(logging.handlers.QueueHandler):
 class CustomJSONFormatter(logging.Formatter):
     """Convert log records into structured JSON lines."""
 
-    def __init__(
-        self,
-        *,
-        fmt_keys: dict[str, str] | None = None,
-        builtin_attrs: list[str] | None = None,
-    ) -> None:
+    def __init__(self, *, fmt_keys: dict[str, str] | None = None) -> None:
         super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
-        self.builtin_attrs = set(builtin_attrs) if builtin_attrs is not None else set()
 
     @override
     def format(self, record: logging.LogRecord) -> str:
@@ -91,10 +113,35 @@ class CustomJSONFormatter(logging.Formatter):
         message.update(always_fields)
 
         for key, val in record.__dict__.items():
-            if key not in self.builtin_attrs:
+            if key not in LOG_RECORD_BUILTIN_ATTRS:
                 message[key] = val
 
         return message
+
+
+class CustomTerminalFormatter(logging.Formatter):
+    """Human-readable formatter that appends extra fields as key=value pairs."""
+
+    @override
+    def format(self, record: logging.LogRecord) -> str:
+        ts = dt.datetime.fromtimestamp(record.created, tz=dt.timezone.utc).strftime(
+            "%H:%M:%S"
+        )
+        base = f"[{record.levelname}] {ts}: {record.getMessage()}"
+
+        extras = {
+            k: v
+            for k, v in record.__dict__.items()
+            if k not in LOG_RECORD_BUILTIN_ATTRS and not k.startswith("_")
+        }
+        if extras:
+            kv = " ".join(f"{k}={v!r}" for k, v in extras.items())
+            base = f"{base} | {kv}"
+
+        if record.exc_info:
+            base = f"{base}\n{self.formatException(record.exc_info)}"
+
+        return base
 
 
 class NonErrorFilter(logging.Filter):
