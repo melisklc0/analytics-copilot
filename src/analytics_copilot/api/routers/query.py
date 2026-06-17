@@ -5,7 +5,9 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from analytics_copilot.api.dependencies import get_graph
+from langfuse.langchain import CallbackHandler
+
+from analytics_copilot.api.dependencies import get_graph, get_langfuse_handler
 from analytics_copilot.schemas.query import QueryRequest, QueryResponse
 
 router = APIRouter(prefix="/query", tags=["query"])
@@ -30,10 +32,12 @@ def _initial_state(question: str) -> dict[str, Any]:
 async def query(
     body: QueryRequest,
     graph: Any = Depends(get_graph),
+    langfuse_handler: CallbackHandler | None = Depends(get_langfuse_handler),
 ) -> QueryResponse:
     log.info("query received", extra={"question": body.question})
 
-    result: dict[str, Any] = await graph.ainvoke(_initial_state(body.question))
+    config: dict[str, Any] = {"callbacks": [langfuse_handler]} if langfuse_handler else {}
+    result: dict[str, Any] = await graph.ainvoke(_initial_state(body.question), config)
 
     query_result = result.get("query_result")
     response: dict[str, Any] = result.get("response") or {}
