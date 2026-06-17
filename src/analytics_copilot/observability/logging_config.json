@@ -71,7 +71,7 @@
     },
     "file_json": {
       "class": "logging.handlers.RotatingFileHandler",
-      "level": "DEBUG",
+      "level": "INFO",
       "formatter": "json",
       "filename": "logs/analytics_copilot.jsonl",
       "maxBytes": 5242880,
@@ -100,7 +100,7 @@
   },
   "loggers": {
     "root": {
-      "level": "DEBUG",
+      "level": "INFO",
       "handlers": [
         "queue_handler"
       ]
