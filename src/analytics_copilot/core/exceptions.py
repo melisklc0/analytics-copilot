@@ -39,6 +39,13 @@ class DocumentTextExtractionError(ApplicationError):
         super().__init__(message)
 
 
+class SQLGenerationError(ApplicationError):
+    """Raised when the LLM fails to produce a SQL query."""
+
+    code = "sql_generation_error"
+    status_code = 500
+
+
 class SQLValidationError(ApplicationError):
     """Raised when generated SQL fails validation checks."""
 

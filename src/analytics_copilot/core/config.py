@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     # dbt — path to manifest.json produced by `dbt docs generate`
     dbt_manifest_path: pathlib.Path = pathlib.Path("dbt/target/manifest.json")
 
+    # Prompt templates directory
+    prompts_dir: pathlib.Path = pathlib.Path("prompts")
+
+    # OpenAI model used by the SQL generator and result formatter
+    openai_model: str = "gpt-4o-mini"
+
     # PostgreSQL
     postgres_host: str = "localhost"
     postgres_port: int = 5433

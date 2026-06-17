@@ -58,6 +58,17 @@ class TestSQLValidatorNode:
         assert result["validation_error"] == "No SQL was generated."
         mock_validator.validate.assert_not_called()
 
+    def test_none_sql_uses_llm_error_as_validation_error(self) -> None:
+        mock_validator = MagicMock()
+        node = SQLValidatorNode(mock_validator)
+        llm_error = "OpenAI API timeout after 30s"
+
+        result = _run(node(_state(sql=None, error=llm_error)))
+
+        assert result["validation_status"] == "invalid"
+        assert result["validation_error"] == llm_error
+        mock_validator.validate.assert_not_called()
+
     def test_empty_sql_returns_invalid_without_calling_validator(self) -> None:
         mock_validator = MagicMock()
         node = SQLValidatorNode(mock_validator)

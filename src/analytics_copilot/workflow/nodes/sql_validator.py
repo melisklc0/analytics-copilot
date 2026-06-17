@@ -15,7 +15,7 @@ class SQLValidatorNode:
         if not sql:
             return {
                 "validation_status": "invalid",
-                "validation_error": "No SQL was generated.",
+                "validation_error": state["error"] or "No SQL was generated.",
             }
         result = self._validator.validate(sql)
         return {
