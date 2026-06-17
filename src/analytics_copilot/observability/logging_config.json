@@ -51,6 +51,9 @@
   "filters": {
     "no_errors": {
       "()": "analytics_copilot.observability.logger.NonErrorFilter"
+    },
+    "request_id": {
+      "()": "analytics_copilot.observability.logger.RequestIDFilter"
     }
   },
   "handlers": {
@@ -68,7 +71,7 @@
     },
     "file_json": {
       "class": "logging.handlers.RotatingFileHandler",
-      "level": "DEBUG",
+      "level": "INFO",
       "formatter": "json",
       "filename": "logs/analytics_copilot.jsonl",
       "maxBytes": 5242880,
@@ -91,12 +94,13 @@
         "file_json",
         "file_log"
       ],
-      "respect_handler_level": true
+      "respect_handler_level": true,
+      "filters": ["request_id"]
     }
   },
   "loggers": {
     "root": {
-      "level": "DEBUG",
+      "level": "INFO",
       "handlers": [
         "queue_handler"
       ]

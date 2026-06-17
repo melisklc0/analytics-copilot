@@ -105,6 +105,17 @@ class NonErrorFilter(logging.Filter):
         return record.levelno <= logging.INFO
 
 
+class RequestIDFilter(logging.Filter):
+    """Inject the current request-ID into every log record."""
+
+    @override
+    def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
+        from analytics_copilot.core.context import request_id_var
+
+        record.request_id = request_id_var.get()
+        return True
+
+
 def _resolve_log_level(level_name: str) -> str:
     normalized = (level_name or "INFO").strip().upper()
     return normalized if normalized in logging._nameToLevel else "INFO"

@@ -15,11 +15,15 @@ services:
     # Read-only bind mount is convenient for local development without letting the container mutate source.
     volumes:
       - ../../src:/app/src:ro
+      # TODO: dbt pipeline — dbt docs generate çıktısını image build adımında üret
+      - ../../dbt/target:/app/dbt/target:ro
       - ../../logs:/app/logs:rw
     environment:
       UV_COMPILE_BYTECODE: "1"
       PYTHONDONTWRITEBYTECODE: "1"
       PYTHONUNBUFFERED: "1"
+      # Inside the Docker network the DB always listens on 5432; POSTGRES_PORT in .env is the host-side mapping only.
+      POSTGRES_PORT: "5432"
     # Minimal hardening that stays low-friction for development.
     security_opt:
       - no-new-privileges:true

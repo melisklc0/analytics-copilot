@@ -39,6 +39,13 @@ class DocumentTextExtractionError(ApplicationError):
         super().__init__(message)
 
 
+class SQLGenerationError(ApplicationError):
+    """Raised when the LLM fails to produce a SQL query."""
+
+    code = "sql_generation_error"
+    status_code = 500
+
+
 class SQLValidationError(ApplicationError):
     """Raised when generated SQL fails validation checks."""
 
@@ -50,6 +57,13 @@ class SQLExecutionError(ApplicationError):
     """Raised when PostgreSQL rejects or fails to execute a query."""
 
     code = "sql_execution_error"
+    status_code = 500
+
+
+class ConfigurationError(ApplicationError):
+    """Raised when the application is misconfigured at startup."""
+
+    code = "configuration_error"
     status_code = 500
 
 

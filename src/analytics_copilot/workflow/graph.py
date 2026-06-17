@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import pathlib
 from typing import Any
 
+from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.graph import END, START, StateGraph
 
 from analytics_copilot.core.config import get_settings
+from analytics_copilot.services.llm import get_llm
 from analytics_copilot.services.manifest_parser import ManifestParser
 from analytics_copilot.services.sql_executor import SQLExecutor
 from analytics_copilot.services.sql_validator import SQLValidator
@@ -35,15 +38,27 @@ def _route_after_executor(state: WorkflowState) -> str:
 def build_graph(
     manifest: ManifestParser | None = None,
     executor: SQLExecutor | None = None,
+    llm: BaseChatModel | None = None,
+    prompts_dir: pathlib.Path | None = None,
 ) -> Any:
     settings = get_settings()
     resolved_manifest = manifest or ManifestParser(settings.dbt_manifest_path)
     resolved_executor = executor or SQLExecutor(settings)
     validator = SQLValidator(resolved_manifest)
+    resolved_prompts_dir = prompts_dir or settings.prompts_dir
+
+    resolved_llm: BaseChatModel = llm or get_llm()
 
     builder = StateGraph(WorkflowState)
 
-    builder.add_node("sql_generator", SQLGeneratorNode())
+    builder.add_node(
+        "sql_generator",
+        SQLGeneratorNode(
+            manifest=resolved_manifest,
+            llm=resolved_llm,
+            prompts_dir=resolved_prompts_dir,
+        ),
+    )
     builder.add_node("sql_validator", SQLValidatorNode(validator))
     builder.add_node("sql_executor", SQLExecutorNode(resolved_executor))
     builder.add_node("result_formatter", ResultFormatterNode())

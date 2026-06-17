@@ -41,6 +41,7 @@ RUN useradd --create-home --shell /usr/sbin/nologin app
 # Copy dependencies and application code with the final runtime owner.
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
 COPY --chown=app:app src ./src
+COPY --chown=app:app prompts ./prompts
 
 # Ensure runtime entrypoints like python and uvicorn stay executable after the venv copy.
 RUN find /app/.venv/bin -type f -exec chmod 755 {} +
