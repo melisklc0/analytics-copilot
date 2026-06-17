@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import lru_cache
 
 from langfuse import Langfuse
@@ -15,11 +16,13 @@ def get_langfuse() -> Langfuse | None:
     if not settings.langfuse_public_key or not settings.langfuse_secret_key:
         logger.info("Langfuse tracing disabled — keys not configured")
         return None
-    client = Langfuse(
-        public_key=settings.langfuse_public_key.get_secret_value(),
-        secret_key=settings.langfuse_secret_key.get_secret_value(),
-        host=settings.langfuse_host,
-    )
+
+    # Set env vars so CallbackHandler's internal get_client() can find credentials.
+    os.environ["LANGFUSE_PUBLIC_KEY"] = settings.langfuse_public_key.get_secret_value()
+    os.environ["LANGFUSE_SECRET_KEY"] = settings.langfuse_secret_key.get_secret_value()
+    os.environ["LANGFUSE_HOST"] = settings.langfuse_host
+
+    client = Langfuse()
     logger.info(
         "Langfuse tracing enabled",
         extra={"langfuse_host": settings.langfuse_host},

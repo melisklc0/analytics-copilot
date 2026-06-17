@@ -55,11 +55,7 @@ def test_get_langfuse_returns_client_when_keys_set() -> None:
         result = get_langfuse()
 
     assert result is mock_client
-    mock_cls.assert_called_once_with(
-        public_key="pk-test",
-        secret_key="sk-test",
-        host="https://cloud.langfuse.com",
-    )
+    mock_cls.assert_called_once_with()
 
 
 def test_get_langfuse_is_cached() -> None:
