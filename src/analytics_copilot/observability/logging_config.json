@@ -51,6 +51,9 @@
   "filters": {
     "no_errors": {
       "()": "analytics_copilot.observability.logger.NonErrorFilter"
+    },
+    "request_id": {
+      "()": "analytics_copilot.observability.logger.RequestIDFilter"
     }
   },
   "handlers": {
@@ -91,7 +94,8 @@
         "file_json",
         "file_log"
       ],
-      "respect_handler_level": true
+      "respect_handler_level": true,
+      "filters": ["request_id"]
     }
   },
   "loggers": {
