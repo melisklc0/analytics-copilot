@@ -36,7 +36,9 @@ async def query(
 ) -> QueryResponse:
     log.info("query received", extra={"question": body.question})
 
-    config: dict[str, Any] = {"callbacks": [langfuse_handler]} if langfuse_handler else {}
+    config: dict[str, Any] = (
+        {"callbacks": [langfuse_handler]} if langfuse_handler else {}
+    )
     result: dict[str, Any] = await graph.ainvoke(_initial_state(body.question), config)
 
     query_result = result.get("query_result")

@@ -60,6 +60,13 @@ class SQLExecutionError(ApplicationError):
     status_code = 500
 
 
+class ConfigurationError(ApplicationError):
+    """Raised when the application is misconfigured at startup."""
+
+    code = "configuration_error"
+    status_code = 500
+
+
 class QueryTimeoutError(ApplicationError):
     """Raised when a query exceeds the statement timeout limit."""
 

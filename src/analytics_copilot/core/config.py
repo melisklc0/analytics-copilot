@@ -1,5 +1,6 @@
 import pathlib
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,8 +20,11 @@ class Settings(BaseSettings):
     # Prompt templates directory
     prompts_dir: pathlib.Path = pathlib.Path("prompts")
 
-    # OpenAI model used by the SQL generator and result formatter
+    llm_provider: Literal["openai", "openrouter"] = "openai"
+
     openai_model: str = "gpt-4o-mini"
+    openrouter_model: str = "openai/gpt-4o-mini"
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
     # PostgreSQL
     postgres_host: str = "localhost"
@@ -38,6 +42,7 @@ class Settings(BaseSettings):
     sql_statement_timeout_ms: int = 10_000
 
     openai_api_key: SecretStr | None = None
+    openrouter_api_key: SecretStr | None = None
 
     # Legacy / reference — kept from OpenRAG skeleton
     database_url: str | None = None

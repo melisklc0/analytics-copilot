@@ -4,10 +4,10 @@ import pathlib
 from typing import Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 
 from analytics_copilot.core.config import get_settings
+from analytics_copilot.services.llm import get_llm
 from analytics_copilot.services.manifest_parser import ManifestParser
 from analytics_copilot.services.sql_executor import SQLExecutor
 from analytics_copilot.services.sql_validator import SQLValidator
@@ -47,19 +47,7 @@ def build_graph(
     validator = SQLValidator(resolved_manifest)
     resolved_prompts_dir = prompts_dir or settings.prompts_dir
 
-    if llm is None:
-        api_key = (
-            settings.openai_api_key.get_secret_value()
-            if settings.openai_api_key
-            else None
-        )
-        resolved_llm: BaseChatModel = ChatOpenAI(  # type: ignore[call-arg]
-            model=settings.openai_model,
-            temperature=0,
-            openai_api_key=api_key,
-        )
-    else:
-        resolved_llm = llm
+    resolved_llm: BaseChatModel = llm or get_llm()
 
     builder = StateGraph(WorkflowState)
 
