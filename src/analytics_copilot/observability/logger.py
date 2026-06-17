@@ -80,9 +80,19 @@ class CustomQueueHandler(logging.handlers.QueueHandler):
 class CustomJSONFormatter(logging.Formatter):
     """Convert log records into structured JSON lines."""
 
-    def __init__(self, *, fmt_keys: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        fmt_keys: dict[str, str] | None = None,
+        builtin_attrs: list[str] | None = None,
+    ) -> None:
         super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
+        self._builtin_attrs = (
+            frozenset(builtin_attrs)
+            if builtin_attrs is not None
+            else LOG_RECORD_BUILTIN_ATTRS
+        )
 
     @override
     def format(self, record: logging.LogRecord) -> str:
@@ -98,7 +108,7 @@ class CustomJSONFormatter(logging.Formatter):
             ).isoformat(),
         }
 
-        if record.exc_info is not None:
+        if record.exc_info:
             always_fields["exc_info"] = self.formatException(record.exc_info)
 
         if record.stack_info is not None:
@@ -113,7 +123,7 @@ class CustomJSONFormatter(logging.Formatter):
         message.update(always_fields)
 
         for key, val in record.__dict__.items():
-            if key not in LOG_RECORD_BUILTIN_ATTRS:
+            if key not in self._builtin_attrs:
                 message[key] = val
 
         return message
