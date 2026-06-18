@@ -61,7 +61,10 @@ def build_graph(
     )
     builder.add_node("sql_validator", SQLValidatorNode(validator))
     builder.add_node("sql_executor", SQLExecutorNode(resolved_executor))
-    builder.add_node("result_formatter", ResultFormatterNode())
+    builder.add_node(
+        "result_formatter",
+        ResultFormatterNode(llm=resolved_llm, prompts_dir=resolved_prompts_dir),
+    )
     builder.add_node("error_handler", ErrorHandlerNode())
 
     builder.add_edge(START, "sql_generator")
