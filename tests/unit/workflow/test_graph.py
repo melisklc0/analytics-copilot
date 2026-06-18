@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import yaml
 
 from analytics_copilot.workflow.graph import build_graph
-from analytics_copilot.workflow.models import SQLOutput
+from analytics_copilot.workflow.models import ResultOutput, SQLOutput
 
 
 def _write_prompts(tmp_path: pathlib.Path) -> None:
@@ -15,6 +15,14 @@ def _write_prompts(tmp_path: pathlib.Path) -> None:
             {
                 "system": "Generate SQL.",
                 "user": "{mart_context}\n{question}{retry_note}",
+            }
+        )
+    )
+    (tmp_path / "result_formatter.yaml").write_text(
+        yaml.dump(
+            {
+                "system": "Summarise results.",
+                "user": "{question}\n{sql}\n{row_count}\n{rows_preview}",
             }
         )
     )
@@ -80,10 +88,17 @@ def test_graph_happy_path_reaches_result_formatter(tmp_path: pathlib.Path) -> No
     mock_executor.run = AsyncMock(
         return_value=MagicMock(rows=[], row_count=0, elapsed_s=0.1, sql="SELECT 1")
     )
-    mock_chain = MagicMock()
-    mock_chain.ainvoke = AsyncMock(return_value=SQLOutput(sql="SELECT 1"))
+
+    def _chain_for(schema: Any) -> MagicMock:
+        chain = MagicMock()
+        if schema is SQLOutput:
+            chain.ainvoke = AsyncMock(return_value=SQLOutput(sql="SELECT 1"))
+        else:
+            chain.ainvoke = AsyncMock(return_value=ResultOutput(answer="1 row found."))
+        return chain
+
     mock_llm = MagicMock()
-    mock_llm.with_structured_output = MagicMock(return_value=mock_chain)
+    mock_llm.with_structured_output = MagicMock(side_effect=_chain_for)
     graph = build_graph(
         manifest=mock_manifest,
         executor=mock_executor,
