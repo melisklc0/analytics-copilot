@@ -44,14 +44,6 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     openrouter_api_key: SecretStr | None = None
 
-    # Legacy / reference — kept from OpenRAG skeleton
-    database_url: str | None = None
-    qdrant_host: str = "qdrant"
-    qdrant_port: int = 6333
-    qdrant_grpc_port: int = 6334
-    qdrant_api_key: SecretStr | None = None
-    qdrant_collection_name: str = "openrag_documents"
-
     langfuse_public_key: SecretStr | None = None
     langfuse_secret_key: SecretStr | None = None
     langfuse_host: str = "http://localhost:3000"
