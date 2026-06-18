@@ -12,6 +12,7 @@ def _state(**overrides: object) -> WorkflowState:
         "question": "top customers?",
         "mart_context": None,
         "sql": "SELECT customer_id FROM mart_customers LIMIT 10",
+        "sql_rationale": None,
         "validation_status": "valid",
         "validation_error": None,
         "query_result": None,

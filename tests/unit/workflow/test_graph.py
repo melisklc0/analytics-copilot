@@ -52,6 +52,7 @@ def _initial_state(question: str = "What are the top customers?") -> dict[str, A
         "question": question,
         "mart_context": None,
         "sql": None,
+        "sql_rationale": None,
         "validation_status": None,
         "validation_error": None,
         "query_result": None,
@@ -92,7 +93,9 @@ def test_graph_happy_path_reaches_result_formatter(tmp_path: pathlib.Path) -> No
     def _chain_for(schema: Any) -> MagicMock:
         chain = MagicMock()
         if schema is SQLOutput:
-            chain.ainvoke = AsyncMock(return_value=SQLOutput(sql="SELECT 1"))
+            chain.ainvoke = AsyncMock(
+                return_value=SQLOutput(sql="SELECT 1", rationale="Used mart_orders.")
+            )
         else:
             chain.ainvoke = AsyncMock(return_value=ResultOutput(answer="1 row found."))
         return chain

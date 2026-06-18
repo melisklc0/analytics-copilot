@@ -7,6 +7,7 @@ class SQLOutput(BaseModel):
     """Structured output produced by the SQL generator LLM call."""
 
     sql: str
+    rationale: str
 
 
 class ResultOutput(BaseModel):

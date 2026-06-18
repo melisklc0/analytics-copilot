@@ -61,6 +61,7 @@ class SQLGeneratorNode:
                 config,
             )
             updates["sql"] = result.sql
+            updates["sql_rationale"] = result.rationale
             updates["error"] = None
         except SQLGenerationError as exc:
             log.warning("sql generation failed", extra={"error": str(exc)})

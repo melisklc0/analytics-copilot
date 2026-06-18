@@ -62,6 +62,7 @@ def _base_state(**overrides: Any) -> WorkflowState:
         "question": "Who are the top customers?",
         "mart_context": None,
         "sql": "SELECT id FROM mart_customers LIMIT 10",
+        "sql_rationale": None,
         "validation_status": "valid",
         "validation_error": None,
         "query_result": _make_query_result(),

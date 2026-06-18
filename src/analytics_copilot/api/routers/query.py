@@ -19,6 +19,7 @@ def _initial_state(question: str) -> dict[str, Any]:
         "question": question,
         "mart_context": None,
         "sql": None,
+        "sql_rationale": None,
         "validation_status": None,
         "validation_error": None,
         "query_result": None,
