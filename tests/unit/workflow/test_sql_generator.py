@@ -45,7 +45,9 @@ def _make_node(
         captured.append(prompt_value)
         if side_effect is not None:
             raise side_effect
-        return SQLOutput(sql=sql)
+        return SQLOutput(
+            sql=sql, rationale="Used mart_customers to answer the question."
+        )
 
     mock_chain = RunnableLambda(fake_llm)
     mock_llm = MagicMock()
@@ -64,6 +66,7 @@ def _base_state(**overrides: Any) -> dict[str, Any]:
         "question": "What are the top 10 customers?",
         "mart_context": None,
         "sql": None,
+        "sql_rationale": None,
         "validation_status": None,
         "validation_error": None,
         "query_result": None,
@@ -155,3 +158,22 @@ def test_builds_mart_context_from_manifest_when_none(
     assert result["mart_context"] is not None
     mock_manifest.get_all_models.assert_called_once()
     mock_manifest.get_context.assert_called_once()
+
+
+# --- Rationale ---
+
+
+def test_rationale_saved_to_state(
+    mock_manifest: MagicMock, prompts_dir: pathlib.Path
+) -> None:
+    node, _ = _make_node(mock_manifest, prompts_dir)
+    result = asyncio.run(node(_base_state(), _EMPTY_CONFIG))
+    assert result["sql_rationale"] == "Used mart_customers to answer the question."
+
+
+def test_rationale_not_set_on_llm_failure(
+    mock_manifest: MagicMock, prompts_dir: pathlib.Path
+) -> None:
+    node, _ = _make_node(mock_manifest, prompts_dir, side_effect=Exception("timeout"))
+    result = asyncio.run(node(_base_state(), _EMPTY_CONFIG))
+    assert "sql_rationale" not in result

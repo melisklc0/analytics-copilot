@@ -14,7 +14,7 @@ system: |
   - Always include a LIMIT clause (use 100 if the question does not imply a specific limit)
   - No subqueries, CTEs, or multiple statements
 
-  Return the SQL query in the `sql` field.
+  Return the SQL in the `sql` field first, then explain in the `rationale` field (one sentence: which mart table you used and why).
 
 user: |
   ## Available mart tables

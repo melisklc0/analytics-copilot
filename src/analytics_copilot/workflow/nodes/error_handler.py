@@ -16,6 +16,7 @@ class ErrorHandlerNode:
                 "question": state["question"],
                 "error": state["error"],
                 "sql": state["sql"],
+                "sql_rationale": state.get("sql_rationale"),
                 "retry_count": state["retry_count"],
             },
         )
