@@ -1,137 +1,61 @@
 # AGENTS.md
 
-You are working on **Analytics Copilot**: a natural language analytics interface over a dbt-modeled PostgreSQL data warehouse.
+You are working on Analytics Copilot: a natural-language analytics interface over a dbt-modeled PostgreSQL warehouse.
 
-The system translates plain-English questions into validated SQL queries against dbt mart tables and returns structured results. The AI layer does not aggregate, join, or compute — dbt handles all of that in mart models. The AI generates `SELECT ... FROM mart.* WHERE ... ORDER BY ... LIMIT ...` queries only.
+## How to Work
 
-Target vision and roadmap: `docs/VIZYON.md`.
-Dbt architecture and modeling rules: `docs/dbt-architecture.md`.
-Langgraph workflow design: `docs/workflow-design.md`.
+- Do not jump straight into implementation.
+- First inspect relevant files and existing patterns.
+- For non-trivial changes, explain the finding, root cause, proposed fix, and files to touch; then wait for approval.
+- If the user clearly says “implement”, “fix it”, or “go ahead”, proceed after a short plan.
+- Do not ask the user to run commands if you can safely run them yourself.
+- Use available tools for repo search, file inspection, and checks.
+- Prefer `rg` for search.
+- Keep changes small and scoped.
 
+## Before Changing Common Areas
 
-## Scope
+- Exceptions: inspect `core/exceptions.py` and `api/exception_handlers.py`.
+- Logging: inspect `observability/logger.py`, `observability/logging_config.json`, and nearby logger usage. No `print`.
+- Config: inspect `core/config.py`; update `.env.example` and docs if needed.
+- Endpoints: inspect existing routers, schemas, dependencies, and endpoint tests.
+- Workflow nodes: inspect `workflow/graph.py`, `workflow/state.py`, existing nodes, and workflow tests.
+- Prompts: keep templates in `prompts/*.yaml`; never hardcode prompt text in Python.
+- dbt: respect model grain; if the needed grain/metric is missing, propose a mart change instead of patching around it.
 
-- Main code: `src/analytics_copilot/`
-- Tests: `tests/`
-- dbt project: `dbt/`
-- Data: `data/raw/` (CSV seeds, git-ignored), `data/processed/`
-- Scripts: `scripts/`
-- Infra: `infra/`, `docker-compose.yml`, `Makefile`
-- Docs: `docs/`
+## Critical Domain Rules
 
-## Stack
+- Runtime SQL may only query dbt AI mart tables.
+- Runtime SQL must be simple: `SELECT ... FROM ... WHERE ... ORDER BY ... LIMIT ...`.
+- Runtime SQL must not contain `JOIN`, `GROUP BY`, aggregates, window functions, CTEs, subqueries, writes, or DDL.
+- The AI layer does not aggregate, join, or compute business metrics.
+- All business metrics, joins, aggregations, and grain decisions belong in dbt marts.
+- If an answer needs missing aggregation, dimension, or grain, fail gracefully or suggest a new mart.
 
-- Python 3.13+
-- FastAPI, Uvicorn
-- Pydantic / pydantic-settings
-- pytest, uv
-- dbt Core, dbt-postgres
-- PostgreSQL (`psycopg`)
-- Planned: LangGraph, LangChain, OpenAI API, Redis, Langfuse, Streamlit
+## Quality Rules
 
-## Commands
+- Follow existing project patterns; avoid wrapper hacks.
+- Do not add dependencies without asking.
+- Do not edit `uv.lock` manually.
+- Do not remove or loosen tests to hide failures.
+- Every new endpoint, service, node, validator, or public behavior needs tests.
+- Mock LLM, PostgreSQL, Redis, Langfuse, and network calls in unit tests.
+- Keep comments, docstrings, prompts, and technical text in English.
 
-Direct:
+## Checks
+
+Run relevant checks after changes when possible:
 
 ```bash
-uv run pytest
-uv run ruff check .
-uv run ruff format --check .
+uv run ruff format
 uv run mypy src/analytics_copilot/
-uv run uvicorn analytics_copilot.app:app --app-dir src --host 0.0.0.0 --port 8090 --reload
-docker compose up analytics-copilot-api
+uv run pytest
 ```
 
-CI runs on every push to `main` and every PR (`.github/workflows/ci.yml`). Four gates must pass: `ruff check`, `ruff format --check`, `mypy src/`, `pytest`. Run all four locally before committing.
+## References
 
-## Docker Note
+Read when relevant:
 
-Docker runs inside WSL on this machine. Use WSL-aware paths and Docker context when troubleshooting.
-
-## Project Shape
-
-```text
-src/analytics_copilot/
-+-- app.py
-+-- api/
-+-- core/
-+-- observability/
-+-- schemas/
-+-- services/
-+-- workflow/        ← LangGraph graph, nodes, state (Step 4)
-
-dbt/
-+-- dbt_project.yml
-+-- profiles.yml
-+-- models/
-    +-- staging/
-    +-- intermediate/
-    +-- marts/
-
-scripts/
-+-- seed_raw.py      ← load Olist CSVs into PostgreSQL raw schema
-```
-
-## Key Design Rules
-
-- **AI does not aggregate.** All GROUP BY, SUM, COUNT, AVG, JOIN logic lives in dbt mart models. The SQL generator produces only simple SELECT queries against mart tables.
-- **LLM context comes from dbt manifest.json.** Never pass raw schema introspection to the LLM — use `dbt docs generate` output so column descriptions and tests are included.
-- **SQL validator enforces the aggregation guard.** Reject any generated SQL containing `GROUP BY`, `SUM(`, `COUNT(`, `AVG(`, `JOIN` — retry with error message.
-- **analyst_ro role is mandatory.** The SQL executor connects via a read-only PostgreSQL role. The LLM cannot issue INSERT, UPDATE, DELETE, or DDL.
-
-## Roadmap Status
-
-- Done: FastAPI skeleton, exception handling, structured logging, Docker Compose, basic tests
-- Step 1 (next): Data Foundation — PostgreSQL + Olist seed
-- Step 2: dbt Modeling — staging → intermediate → mart, schema.yml
-- Step 3: Query Engine — SQL executor, manifest parser, SQL validator
-- Step 4: LangGraph Workflow — intent classifier, schema selector, SQL generator, validator, executor, formatter
-- Step 5: FastAPI Endpoints — /query, /schema, /history
-- Step 6: Redis Cache
-- Step 7: UI + Observability + Polish
-
-## Rules
-
-- Use tools before terminal commands.
-- Search before adding new files, schemas, services, config keys, prompts, or endpoints.
-- Follow existing repo structure.
-- Use type hints on public code.
-- Prefer async patterns for API/service code.
-- Keep comments, docstrings, and prompts in English.
-- Keep prompt templates in `prompts/` YAML files — never hardcode in Python.
-- Mock LLM, PostgreSQL, Redis, Langfuse, and network calls in unit tests.
-- **Follow framework-idiomatic patterns. No wrapper hacks.** Use the standard pattern each framework provides — don't invent factory closures or decorator workarounds when the framework already has a clean answer. 
-- Update `.env.example` and docs when adding required config.
-- **Every new service, node, validator, or endpoint gets a test.** No code ships without a corresponding test file in `tests/`. Mock external dependencies; never hit real DBs or APIs in unit tests.
-- **After every change run the full CI gate locally:** `uv run ruff check . && uv run ruff format --check . && uv run mypy src/analytics_copilot/ && uv run pytest`.
-
-## Boundaries
-
-Ask first before:
-
-- Adding dependencies.
-- Changing public API contracts.
-- Adding a new top-level package, database, worker, or frontend framework.
-- Large dependency or version migrations.
-
-Never:
-
-- Commit secrets or private data.
-- Edit `uv.lock` manually.
-- Remove or loosen tests to hide failures.
-- Use private company data as sample data.
-- Hardcode prompts in Python.
-- Connect to PostgreSQL with a role that has write access.
-
-## Commits
-
-Use conventional commits:
-
-```text
-feat(dbt): add mart_customers model with CLV calculation
-feat(workflow): add sql-validator node with aggregation guard
-feat(api): add POST /query endpoint
-fix(executor): enforce row limit on all queries
-test(validator): cover aggregation guard rejection cases
-docs(vizyon): update roadmap status
-```
+docs/VIZYON.md
+docs/dbt-architecture.md
+docs/workflow-design.md
