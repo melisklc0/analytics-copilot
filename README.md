@@ -213,16 +213,38 @@ Every workflow run is traced in [Langfuse](https://langfuse.com/) — LLM calls,
 git clone https://github.com/melisklc0/analytics-copilot
 cd analytics-copilot
 
-cp .env.example .env          # add your OpenAI API key
+cp .env.example .env          # optional: add your OpenAI API key for the AI copilot
 
-make docker-up                # PostgreSQL + API + optional Langfuse/Superset
+make up                       # core: Postgres → seed sample → dbt build → API (:8090)
+```
 
-# Download the Olist dataset from Kaggle and place CSVs under data/raw/olist-dataset/
-# https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
+That single command bootstraps a **populated** warehouse: a committed, FK-consistent
+Olist sample (~15k orders) seeds automatically, then dbt builds every mart — no Kaggle
+download needed. The seed is idempotent, so re-running `make up` never clobbers data.
 
-make seed                     # load Olist data into PostgreSQL
+**Optional stacks** (opt-in via Compose profiles, kept out of the default to stay light):
+
+```bash
+make up-dashboard             # + Superset BI          (:8088)
+make up-observability         # + Langfuse tracing      (:3000)
+make up-all                   # core + Superset + Langfuse
+
+make down                     # stop everything (keeps seeded data)
+make down-volumes             # stop + wipe volumes (fresh re-seed next time)
+```
+
+**Full Kaggle dataset** instead of the sample — download CSVs into
+`data/raw/olist-dataset/`, then:
+
+```bash
+OLIST_DATA_DIR=data/raw/olist-dataset SEED_FORCE=1 make up
+```
+
+**Local (non-Docker) workflow:**
+
+```bash
+make seed                     # load the sample into a running PostgreSQL
 make dbt-pipeline             # deps → run → test → docs generate
-
 make run                      # FastAPI on :8090 with hot reload
 make test                     # pytest
 ```
