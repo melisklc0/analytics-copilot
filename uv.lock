@@ -47,6 +47,10 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+dbt = [
+    { name = "dbt-core" },
+    { name = "dbt-postgres" },
+]
 dev = [
     { name = "dbt-core" },
     { name = "dbt-postgres" },
@@ -76,6 +80,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+dbt = [
+    { name = "dbt-core", specifier = ">=1.9.0" },
+    { name = "dbt-postgres", specifier = ">=1.9.0" },
+]
 dev = [
     { name = "dbt-core", specifier = ">=1.9.0" },
     { name = "dbt-postgres", specifier = ">=1.9.0" },

@@ -11,3 +11,12 @@ logs/*
 !logs/.gitkeep
 docs/_build
 docs/
+
+# Olist CSVs (~128 MB raw) — never copied into any image; the seeder bind-mounts
+# data/seed at runtime. Excluding keeps the build context small for all builds.
+data/
+
+# dbt build artifacts — the dbt project is bind-mounted at runtime, never copied.
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/

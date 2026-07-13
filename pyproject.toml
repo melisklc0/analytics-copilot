@@ -30,9 +30,15 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
+# dbt is a build-time tool, not an API runtime dependency. Isolating it lets the
+# dbt container install ONLY dbt (uv sync --only-group dbt) at the exact locked
+# version used locally, so package-lock.yml never drifts across environments.
+dbt = [
     "dbt-core>=1.9.0",
     "dbt-postgres>=1.9.0",
+]
+dev = [
+    { include-group = "dbt" },
     "httpx>=0.28.0",
     "mypy>=1.13.0",
     "pytest>=8.3.0",

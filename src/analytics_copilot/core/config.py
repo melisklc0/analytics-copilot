@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # Olist seed data — defaults to the committed FK-consistent sample.
     # Point at data/raw/olist-dataset (via OLIST_DATA_DIR) to load the full set.
     olist_data_dir: pathlib.Path = pathlib.Path("data/seed/olist-sample")
+    # Force a re-seed even if the warehouse already has data (e.g. to swap the
+    # sample for the full dataset). Off by default so repeated runs are no-ops.
+    seed_force: bool = False
 
     # Prompt templates directory
     prompts_dir: pathlib.Path = pathlib.Path("prompts")

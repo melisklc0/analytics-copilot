@@ -37,7 +37,9 @@ services:
   # project bind-mounted; target/ lands on the host so the API can read
   # manifest.json (see the api service's read-only dbt/target mount).
   analytics-copilot-dbt:
-    image: ghcr.io/dbt-labs/dbt-postgres:1.9.latest
+    build:
+      context: ../..
+      dockerfile: infra/pipeline/dbt/Dockerfile
     container_name: analytics_copilot_dbt
     working_dir: /usr/app
     env_file:
@@ -53,7 +55,7 @@ services:
       - ../../dbt:/usr/app:rw
     # build = run + test interleaved in DAG order (fail-fast). docs generate is
     # required afterwards: the API reads target/manifest.json (DBT_MANIFEST_PATH).
-    entrypoint: ["/bin/bash", "-c"]
+    entrypoint: ["/bin/sh", "-c"]
     command: ["dbt deps && dbt build && dbt docs generate"]
     depends_on:
       analytics-copilot-seeder:

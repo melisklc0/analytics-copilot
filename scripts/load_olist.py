@@ -93,6 +93,22 @@ def main() -> None:
 
     with psycopg.connect(dsn(), autocommit=False) as conn:
         with conn.cursor() as cur:
+            # Idempotent: skip if already seeded so repeated `docker compose up`
+            # never clobbers the warehouse. Set SEED_FORCE=1 to reload anyway
+            # (e.g. after switching OLIST_DATA_DIR to the full dataset); each
+            # table is truncated before load, so a forced run cleanly replaces.
+            cur.execute("SELECT COUNT(*) FROM raw.orders")
+            row = cur.fetchone()
+            existing = int(row[0]) if row else 0
+            if existing > 0 and not s.seed_force:
+                print(
+                    f"Already seeded ({existing:,} orders) — skipping. "
+                    "Set SEED_FORCE=1 to reload."
+                )
+                return
+            if existing > 0:
+                print(f"SEED_FORCE set — reloading over {existing:,} existing orders.")
+
             for table, filename in present:
                 print(f"  {filename} -> raw.{table}", end="", flush=True)
                 count = load_table(cur, table, dataset_dir / filename)
