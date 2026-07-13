@@ -115,10 +115,10 @@ dbt is the heart. Both the BI layer and the AI layer consume the same mart model
 
 ## Data Modeling (dbt)
 
-The warehouse runs on the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) — 100k+ orders, 9 source tables, open license.
+The warehouse runs on the [Olist Brazilian E-Commerce dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce) — 100k+ orders, 9 source tables, open license. A trimmed, FK-consistent **~15k-order sample** is committed under `data/seed/` so `make up` populates the warehouse with no Kaggle download; point `OLIST_DATA_DIR` at the full dataset to load everything.
 
 ```
-data/raw/ (Olist CSVs)
+data/seed/  (committed sample)  ·  data/raw/  (full Kaggle dataset, optional)
         │
         ▼
 models/staging/              ← type casting, column renaming, 1:1 with sources
@@ -149,6 +149,8 @@ Superset connects to PostgreSQL via a dedicated `superset_ro` read-only role and
 The separation from the AI marts is intentional: dashboard marts are denormalized for fast GROUP BY at query time in Superset, while AI marts are denormalized so the AI never needs to GROUP BY at all. Same dbt foundation, different mart shapes for different consumers.
 
 `superset_ro` has SELECT access on `main_marts` only — no raw schema, no intermediate models, no DDL.
+
+A native dashboard export is committed under `infra/superset/assets/dashboards/` and imported automatically by the `superset-import` one-shot (`make up-dashboard`), gated on the dbt build so it renders against real data. The importer rebuilds the connection `sqlalchemy_uri` from `.env` at import time, so the exported (masked) password and host are irrelevant — the dashboard just works on a fresh clone.
 
 
 ## AI Interface (NL2SQL)
@@ -196,7 +198,8 @@ Every workflow run is traced in [Langfuse](https://langfuse.com/) — LLM calls,
 
 | Phase | Status | Description |
 |---|---|---|
-| Data Foundation | ✅ Done | PostgreSQL 17, Olist seed, `analyst_ro` role |
+| Data Foundation | ✅ Done | PostgreSQL 17, auto-seeded Olist sample, `analyst_ro` + `superset_ro` roles |
+| Docker Pipeline | ✅ Done | `docker compose up` chains seed → dbt build → API; Superset dashboard auto-import |
 | dbt Modeling | ✅ Done | 14 models across staging → intermediate → marts |
 | Query Engine | ✅ Done | SQL executor, manifest parser, 3-layer validator |
 | LangGraph Workflow | 🔨 In Progress | Intent classifier, schema selector, SQL generator, retry loop |
@@ -289,7 +292,13 @@ dbt/
 infra/
 ├── postgres/init.sql         # Schema DDL + role-based access control
 ├── api/Dockerfile            # Multi-stage build, non-root user
-└── langfuse/                 # Self-hosted LLM observability
+├── pipeline/                 # One-shot seed + dbt build jobs (bootstrap chain)
+├── superset/                 # BI stack + auto-imported dashboard export
+└── langfuse/                 # Self-hosted LLM observability (observability profile)
+
+scripts/
+├── make_sample.py            # Generate the committed FK-consistent Olist sample
+└── load_olist.py             # Seed raw.* from the sample (or full dataset)
 
 tests/
 ├── unit/services/            # SQL validator, executor, manifest parser
