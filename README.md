@@ -11,6 +11,7 @@
 > **Natural language interface for dbt-modeled PostgreSQL data warehouses.**  
 > Ask a question in plain English. Get back validated SQL, query results, and a natural-language explanation — no aggregation in the AI layer, no hallucinated column names.
 
+![Dashboard Preview](infra/superset/assets/dashboard_preview.png)
 
 ## The Core Idea
 
