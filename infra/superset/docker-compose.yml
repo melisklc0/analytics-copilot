@@ -154,6 +154,42 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # One-shot: import the committed dashboard export once the marts exist and
+  # Superset is healthy, then exit. Rewrites the connection URI from env so the
+  # warehouse credentials always follow .env (see import_dashboards.py).
+  superset-import:
+    build:
+      context: ../..
+      dockerfile: infra/superset/Dockerfile
+    container_name: analytics_copilot_superset_import
+    profiles: ["dashboard"]
+    depends_on:
+      superset:
+        condition: service_healthy
+      analytics-copilot-dbt:
+        condition: service_completed_successfully
+    env_file:
+      - path: ../../.env
+        required: false
+    environment:
+      SUPERSET_CONFIG_PATH: /app/superset_config.py
+      SQLALCHEMY_DATABASE_URI: "postgresql://${SUPERSET_DB_USER:-superset}:${SUPERSET_DB_PASSWORD:-superset}@superset-db:5432/${SUPERSET_DB_NAME:-superset}"
+      REDIS_HOST: superset-redis
+      REDIS_PORT: "6379"
+      SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY:-local-dev-secret-key-change-in-prod}"
+      # Warehouse connection — built into the export's sqlalchemy_uri at import.
+      # Inside the Docker network the DB always listens on 5432.
+      POSTGRES_HOST: analytics-copilot-db
+      POSTGRES_PORT: "5432"
+      DASHBOARD_EXPORT_DIR: /app/dashboards
+    volumes:
+      - ../../infra/superset/assets/dashboards:/app/dashboards:ro
+      - ../../infra/superset/import_dashboards.py:/app/import_dashboards.py:ro
+    command: ["/app/.venv/bin/python", "/app/import_dashboards.py"]
+    networks:
+      - analytics-copilot-network
+    restart: "no"
+
 volumes:
   superset_db_data:
     name: analytics_copilot_superset_db_data
