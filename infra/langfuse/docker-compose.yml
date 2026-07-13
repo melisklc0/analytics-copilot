@@ -1,7 +1,12 @@
+# LLM observability stack (Langfuse). Opt-in via the `observability` profile:
+#   docker compose --profile observability up
+# Left out of the default `docker compose up` to keep the local footprint small
+# (this stack alone is ClickHouse + MinIO + Redis + Postgres + web + worker).
 services:
   langfuse-worker:
     image: langfuse/langfuse-worker:3
     container_name: analytics_copilot_langfuse_worker
+    profiles: ["observability"]
     depends_on:
       langfuse-postgres:
         condition: service_healthy
@@ -36,6 +41,7 @@ services:
   langfuse-web:
     image: langfuse/langfuse:3
     container_name: analytics_copilot_langfuse
+    profiles: ["observability"]
     depends_on:
       langfuse-postgres:
         condition: service_healthy
@@ -88,6 +94,7 @@ services:
   langfuse-postgres:
     image: postgres:17-alpine
     container_name: analytics_copilot_langfuse_postgres
+    profiles: ["observability"]
     environment:
       POSTGRES_USER: langfuse
       POSTGRES_PASSWORD: "${LANGFUSE_POSTGRES_PASSWORD:-langfuse}"
@@ -106,6 +113,7 @@ services:
   langfuse-minio:
     image: minio/minio
     container_name: analytics_copilot_minio
+    profiles: ["observability"]
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: "${LANGFUSE_MINIO_ACCESS_KEY:-minio}"
@@ -125,6 +133,7 @@ services:
   langfuse-minio-init:
     image: minio/mc
     container_name: analytics_copilot_minio_init
+    profiles: ["observability"]
     depends_on:
       langfuse-minio:
         condition: service_healthy
@@ -140,6 +149,7 @@ services:
   langfuse-redis:
     image: redis:7-alpine
     container_name: analytics_copilot_langfuse_redis
+    profiles: ["observability"]
     command: redis-server --requirepass "${LANGFUSE_REDIS_AUTH:-langfuse}"
     networks:
       - analytics-copilot-network
@@ -153,6 +163,7 @@ services:
   langfuse-clickhouse:
     image: clickhouse/clickhouse-server:24.12-alpine
     container_name: analytics_copilot_clickhouse
+    profiles: ["observability"]
     environment:
       CLICKHOUSE_DB: default
       CLICKHOUSE_USER: "${LANGFUSE_CLICKHOUSE_USER:-default}"

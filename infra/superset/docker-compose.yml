@@ -1,9 +1,14 @@
+# BI dashboard stack (Apache Superset). Opt-in via the `dashboard` profile:
+#   docker compose --profile dashboard up
+# Left out of the default `docker compose up` to keep the local footprint small
+# (web + worker + beat + metadata Postgres + Redis).
 services:
   superset-init:
     build:
       context: ../..
       dockerfile: infra/superset/Dockerfile
     container_name: analytics_copilot_superset_init
+    profiles: ["dashboard"]
     depends_on:
       superset-db:
         condition: service_healthy
@@ -33,6 +38,7 @@ services:
       context: ../..
       dockerfile: infra/superset/Dockerfile
     container_name: analytics_copilot_superset
+    profiles: ["dashboard"]
     ports:
       - "${SUPERSET_PORT:-8088}:8088"
     depends_on:
@@ -67,6 +73,7 @@ services:
       context: ../..
       dockerfile: infra/superset/Dockerfile
     container_name: analytics_copilot_superset_worker
+    profiles: ["dashboard"]
     depends_on:
       superset:
         condition: service_started
@@ -89,6 +96,7 @@ services:
       context: ../..
       dockerfile: infra/superset/Dockerfile
     container_name: analytics_copilot_superset_beat
+    profiles: ["dashboard"]
     depends_on:
       superset:
         condition: service_started
@@ -116,6 +124,7 @@ services:
   superset-db:
     image: postgres:17-alpine
     container_name: analytics_copilot_superset_db
+    profiles: ["dashboard"]
     environment:
       POSTGRES_DB: "${SUPERSET_DB_NAME:-superset}"
       POSTGRES_USER: "${SUPERSET_DB_USER:-superset}"
@@ -134,6 +143,7 @@ services:
   superset-redis:
     image: redis:7-alpine
     container_name: analytics_copilot_superset_redis
+    profiles: ["dashboard"]
     command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
     networks:
       - analytics-copilot-network
