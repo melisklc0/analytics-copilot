@@ -228,3 +228,8 @@ logs/*
 # Olist raw data (large CSVs — download via Kaggle)
 data/raw/olist-dataset/*.csv
 data/processed/
+
+# The trimmed, FK-consistent sample under data/seed/ IS committed on purpose:
+# it lets `docker compose up` seed a populated warehouse without the Kaggle
+# download. Regenerate with `uv run python scripts/make_sample.py`.
+!data/seed/

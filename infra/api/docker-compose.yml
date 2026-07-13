@@ -28,6 +28,13 @@ services:
     security_opt:
       - no-new-privileges:true
     stop_grace_period: 30s
+    # Wait for the seed -> dbt pipeline so the API starts against a populated
+    # warehouse with a fresh manifest.json, never an empty one.
+    depends_on:
+      analytics-copilot-db:
+        condition: service_healthy
+      analytics-copilot-dbt:
+        condition: service_completed_successfully
     # Healthcheck ensures container is responsive before marking healthy, with retries and timeouts for robustness.
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=3)"]

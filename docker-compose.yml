@@ -1,5 +1,6 @@
 include:
   - path: infra/api/docker-compose.yml
+  - path: infra/pipeline/docker-compose.yml
   - path: infra/postgres/docker-compose.yml
   - path: infra/superset/docker-compose.yml
   - path: infra/langfuse/docker-compose.yml
