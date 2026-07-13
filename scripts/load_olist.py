@@ -3,8 +3,13 @@
 Usage:
     uv run python scripts/load_olist.py
 
-Expects CSVs in data/raw/olist-dataset/.
-Download from: https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
+Loads from the committed sample by default so a fresh `docker compose up` seeds a
+populated warehouse with no Kaggle download. Point OLIST_DATA_DIR at the full
+dataset to load everything:
+
+    OLIST_DATA_DIR=data/raw/olist-dataset uv run python scripts/load_olist.py
+
+Full dataset: https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
 """
 
 from __future__ import annotations
@@ -16,7 +21,10 @@ import psycopg
 
 from analytics_copilot.core.config import get_settings
 
-DATASET_DIR = Path(__file__).parent.parent / "data" / "raw" / "olist-dataset"
+# The data directory comes from Settings.olist_data_dir (env: OLIST_DATA_DIR),
+# defaulting to the committed FK-consistent sample. The sample omits geolocation
+# (no staging model consumes it) — missing CSVs are skipped, so both the sample
+# and the full dataset load cleanly.
 
 # (raw table, csv filename) in dependency order — parents before children.
 TABLES: list[tuple[str, str]] = [
@@ -62,23 +70,32 @@ def load_table(cur: psycopg.Cursor, table: str, path: Path) -> int:
 
 
 def main() -> None:
-    missing = [f for _, f in TABLES if not (DATASET_DIR / f).exists()]
-    if missing:
-        print(f"Missing files in {DATASET_DIR}:", file=sys.stderr)
-        for f in missing:
-            print(f"  {f}", file=sys.stderr)
+    s = get_settings()
+    dataset_dir = s.olist_data_dir
+    if not dataset_dir.exists():
+        print(f"Data directory not found: {dataset_dir}", file=sys.stderr)
         sys.exit(1)
 
-    s = get_settings()
+    # Tables whose CSV is present. Absent files are skipped (the sample omits
+    # geolocation), but an entirely empty directory is a misconfiguration.
+    present = [(t, f) for t, f in TABLES if (dataset_dir / f).exists()]
+    skipped = [f for t, f in TABLES if not (dataset_dir / f).exists()]
+    if not present:
+        print(f"No Olist CSVs found in {dataset_dir}", file=sys.stderr)
+        sys.exit(1)
+
     print(
-        f"Connecting to PostgreSQL @ {s.postgres_host}:{s.postgres_port}/{s.postgres_db}..."
+        f"Loading from {dataset_dir} into "
+        f"{s.postgres_host}:{s.postgres_port}/{s.postgres_db}..."
     )
+    for f in skipped:
+        print(f"  (skip) {f} not present")
 
     with psycopg.connect(dsn(), autocommit=False) as conn:
         with conn.cursor() as cur:
-            for table, filename in TABLES:
-                print(f"  {filename} → raw.{table}", end="", flush=True)
-                count = load_table(cur, table, DATASET_DIR / filename)
+            for table, filename in present:
+                print(f"  {filename} -> raw.{table}", end="", flush=True)
+                count = load_table(cur, table, dataset_dir / filename)
                 print(f"  ({count:,} rows)")
         conn.commit()
 

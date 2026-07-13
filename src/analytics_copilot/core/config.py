@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     # dbt — path to manifest.json produced by `dbt docs generate`
     dbt_manifest_path: pathlib.Path = pathlib.Path("dbt/target/manifest.json")
 
+    # Olist seed data — defaults to the committed FK-consistent sample.
+    # Point at data/raw/olist-dataset (via OLIST_DATA_DIR) to load the full set.
+    olist_data_dir: pathlib.Path = pathlib.Path("data/seed/olist-sample")
+
     # Prompt templates directory
     prompts_dir: pathlib.Path = pathlib.Path("prompts")
 
