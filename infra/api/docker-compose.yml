@@ -2,7 +2,8 @@ services:
   analytics-copilot-api:
     build:
       context: ../..
-      dockerfile: infra/api/Dockerfile
+      dockerfile: infra/Dockerfile
+      target: api
     container_name: analytics_copilot_api
     # Read environment variables from the root .env file
     env_file:

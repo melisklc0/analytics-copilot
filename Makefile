@@ -1,4 +1,4 @@
-.PHONY: test run seed dbt-pipeline dbt-run dbt-test dbt-docs docker-build docker-up docker-postgres \
+.PHONY: test run ui seed dbt-pipeline dbt-run dbt-test dbt-docs docker-build docker-up docker-postgres \
 	up up-dashboard up-observability up-all down down-volumes
 
 test:
@@ -6,6 +6,9 @@ test:
 
 run:
 	uv run uvicorn analytics_copilot.app:app --app-dir src --host 0.0.0.0 --port 8090 --reload
+
+ui:
+	docker compose up -d --build analytics-copilot-ui
 
 seed:
 	uv run python scripts/load_olist.py
@@ -36,7 +39,7 @@ docker-up:
 # heavier optional stacks on top. Enabling a profile from nothing still brings
 # core up too, since core services carry no profile.
 
-up:                      ## core only: postgres + seed + dbt + api
+up:                      ## core only: postgres + seed + dbt + api + ui
 	docker compose up -d
 
 up-dashboard:            ## core + Superset BI (:8088)

@@ -1,0 +1,42 @@
+# Streamlit console — the demo UI over the API. A pure HTTP client, so it only
+# needs the API reachable; it makes /query/stream calls server-side and embeds
+# the Superset dashboard in the user's browser.
+services:
+  analytics-copilot-ui:
+    build:
+      context: ../..
+      dockerfile: infra/Dockerfile
+      target: ui
+    container_name: analytics_copilot_ui
+    env_file:
+      - path: ../../.env
+        required: false
+    init: true
+    ports:
+      # host:container — container side must stay 8501 (Streamlit listens there);
+      # host defaults to 8502 to avoid clashing with agentic-rag's UI on 8501.
+      - "${STREAMLIT_PORT:-8502}:8501"
+    # Live-edit the app without a rebuild during development.
+    volumes:
+      - ../../streamlit:/app/streamlit:ro
+    environment:
+      PYTHONUNBUFFERED: "1"
+      # Server-side call → reach the API by its in-network hostname (not :8090).
+      CORE_API_URL: "http://analytics-copilot-api:8090"
+      # Browser-side iframe → must stay browser-reachable (host, not container).
+      SUPERSET_URL: "${SUPERSET_URL:-http://localhost:8088}"
+      SUPERSET_DASHBOARD_ID: "${SUPERSET_DASHBOARD_ID:-}"
+    security_opt:
+      - no-new-privileges:true
+    # No depends_on: the console is a pure HTTP client that reaches the API at
+    # request time (and fails gracefully if it's down), so it starts/restarts
+    # on its own without dragging up the api → dbt → seeder → postgres chain.
+    # It only shares the network so it can resolve the api hostname when up.
+    stop_grace_period: 10s
+    restart: unless-stopped
+    networks:
+      - analytics-copilot-network
+
+networks:
+  analytics-copilot-network:
+    name: analytics-copilot-network
