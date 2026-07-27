@@ -8,7 +8,8 @@ services:
   analytics-copilot-seeder:
     build:
       context: ../..
-      dockerfile: infra/api/Dockerfile
+      dockerfile: infra/Dockerfile
+      target: api
     container_name: analytics_copilot_seeder
     working_dir: /app
     env_file:

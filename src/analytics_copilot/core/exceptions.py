@@ -45,3 +45,10 @@ class QueryTimeoutError(ApplicationError):
 
     def __init__(self, timeout_ms: int) -> None:
         super().__init__(f"Query exceeded the {timeout_ms // 1000}s timeout limit")
+
+
+class SupersetEmbedError(ApplicationError):
+    """Raised when Superset cannot mint a guest token (unreachable or rejected)."""
+
+    code = "superset_embed_error"
+    status_code = 502

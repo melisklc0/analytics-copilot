@@ -55,6 +55,21 @@ class Settings(BaseSettings):
     langfuse_secret_key: SecretStr | None = None
     langfuse_host: str = "http://localhost:3000"
 
+    # Superset embedding (guest-token flow). The API mints short-lived guest
+    # tokens so the Streamlit console can embed a dashboard via the Superset SDK.
+    # internal_url: API → Superset inside the Docker network.
+    # url: the browser-reachable origin returned to the SDK.
+    superset_internal_url: str = "http://superset:8088"
+    superset_url: str = "http://localhost:8088"
+    # Dashboard to embed — numeric id or slug. Defaults to the committed demo
+    # dashboard (imported by superset-import); override for a different one.
+    superset_dashboard_id: str = "brazil_ecommerce"
+    # Service account used only to mint guest tokens (reuses the admin creds).
+    superset_admin_user: str = "admin"
+    superset_admin_password: SecretStr = SecretStr("admin")
+    # Comma-separated origins allowed to host the embedded iframe (the console).
+    superset_embed_allowed_domains: str = "http://localhost:8502"
+
     model_config = SettingsConfigDict(
         env_file=pathlib.Path(".env"),
         env_file_encoding="utf-8",

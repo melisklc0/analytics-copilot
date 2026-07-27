@@ -27,8 +27,8 @@ st.set_page_config(
 
 API_URL = os.getenv("CORE_API_URL", "http://localhost:8090")
 SUPERSET_URL = os.getenv("SUPERSET_URL", "http://localhost:8088")
-# Optional: numeric id of a dashboard to embed. Empty → show setup hint instead.
-SUPERSET_DASHBOARD_ID = os.getenv("SUPERSET_DASHBOARD_ID", "").strip()
+# Dashboard id/slug to embed — defaults to the committed demo dashboard.
+SUPERSET_DASHBOARD_ID = os.getenv("SUPERSET_DASHBOARD_ID", "brazil_ecommerce").strip()
 REQUEST_TIMEOUT = 300
 
 EXAMPLE_QUESTIONS = [

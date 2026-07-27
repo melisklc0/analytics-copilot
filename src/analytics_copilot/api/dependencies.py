@@ -5,13 +5,20 @@ from typing import Any
 from fastapi import Request
 from langfuse.langchain import CallbackHandler
 
+from analytics_copilot.core.config import get_settings
 from analytics_copilot.core.context import request_id_var
 from analytics_copilot.observability.tracing import get_langfuse
+from analytics_copilot.services.superset import SupersetEmbedService
 
 
 def get_graph(request: Request) -> Any:
     """FastAPI dependency — returns the compiled LangGraph graph from app state."""
     return request.app.state.graph
+
+
+def get_embed_service() -> SupersetEmbedService:
+    """FastAPI dependency — a Superset guest-token minter bound to settings."""
+    return SupersetEmbedService(get_settings())
 
 
 def get_langfuse_handler() -> CallbackHandler | None:
