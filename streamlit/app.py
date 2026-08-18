@@ -26,9 +26,6 @@ st.set_page_config(
 )
 
 API_URL = os.getenv("CORE_API_URL", "http://localhost:8090")
-SUPERSET_URL = os.getenv("SUPERSET_URL", "http://localhost:8088")
-# Optional: numeric id of a dashboard to embed. Empty → show setup hint instead.
-SUPERSET_DASHBOARD_ID = os.getenv("SUPERSET_DASHBOARD_ID", "").strip()
 REQUEST_TIMEOUT = 300
 
 EXAMPLE_QUESTIONS = [
@@ -314,25 +311,58 @@ with copilot_tab:
 
 
 # ===========================================================================
-# DASHBOARD TAB — embedded Superset
+# DASHBOARD TAB — Superset embedded via guest token (Embedded_Guest role)
 # ===========================================================================
+def fetch_guest_token() -> dict[str, Any] | None:
+    """Ask the API to mint a short-lived Superset guest token (server-side)."""
+    try:
+        resp = requests.post(f"{API_URL}/dashboard/guest-token", timeout=30)
+    except Exception as exc:
+        st.error(f"Cannot reach API at {API_URL}: {exc}")
+        return None
+    if resp.status_code != 200:
+        st.error(f"Could not load the dashboard: {api_error(resp)}")
+        return None
+    return resp.json()
+
+
+def render_embedded_dashboard(token: str, embed_uuid: str, domain: str) -> None:
+    """Mount the dashboard with the Superset embedded SDK — chromeless, guest role.
+
+    hideTitle drops the top edit/title bar; the guest token scopes it to the
+    Embedded_Guest role (read-only, no admin); filters.visible shows the panel.
+    """
+    html = (
+        "<div id='dash' style='width:100%;height:850px;'></div>"
+        "<script src='https://unpkg.com/@superset-ui/embedded-sdk'></script>"
+        "<script>"
+        "supersetEmbeddedSdk.embedDashboard({"
+        f"id:'{embed_uuid}',"
+        f"supersetDomain:'{domain}',"
+        "mountPoint:document.getElementById('dash'),"
+        f"fetchGuestToken:()=>Promise.resolve('{token}'),"
+        "dashboardUiConfig:{hideTitle:true,hideTab:true,hideChartControls:false,"
+        "filters:{visible:true,expanded:true}}"
+        "});"
+        "new MutationObserver(()=>{"
+        "const f=document.querySelector('#dash iframe');"
+        "if(f){f.style.width='100%';f.style.height='850px';f.style.border='0';}"
+        "}).observe(document.getElementById('dash'),{childList:true,subtree:true});"
+        "</script>"
+    )
+    st.components.v1.html(html, height=870, scrolling=False)
+
+
 with dashboard_tab:
     st.markdown("<div class='eyebrow'>Governed dashboard</div>", True)
     st.markdown(
-        "<div class='subtle'>The same dbt marts, pre-aggregated for BI. "
-        "Powered by Apache Superset.</div>",
+        "<div class='subtle'>The same dbt marts, read-only via a Superset "
+        "guest token — no admin, no edit.</div>",
         True,
     )
     st.write("")
-    if SUPERSET_DASHBOARD_ID:
-        embed_url = (
-            f"{SUPERSET_URL}/superset/dashboard/{SUPERSET_DASHBOARD_ID}/"
-            "?standalone=1&show_filters=0"
-        )
-        st.components.v1.iframe(embed_url, height=900, scrolling=True)
-    else:
-        st.info(
-            "Set `SUPERSET_DASHBOARD_ID` (and start Superset with "
-            "`make up-dashboard`) to embed the dashboard here. Open Superset at "
-            f"{SUPERSET_URL} to find a dashboard's id in its URL."
+    payload = fetch_guest_token()
+    if payload:
+        render_embedded_dashboard(
+            payload["token"], payload["embed_uuid"], payload["superset_domain"]
         )

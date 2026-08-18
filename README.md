@@ -42,37 +42,33 @@ LLM context comes from `dbt docs generate` rather than raw `INFORMATION_SCHEMA`.
 ## Architecture
 
 ```
-User question (natural language)
-        │
+Streamlit console  ──  pure HTTP client, no logic
+        │                 live pipeline trace · generated SQL · Superset tab
         ▼
-┌─────────────────────────────────────────┐
-│          FastAPI Gateway                │
-│  POST /query · GET /schema · /health   │
-│  structured JSON logging · request-ID  │
-└────────────────┬────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│               FastAPI Gateway                   │
+│  POST /query · POST /query/stream (SSE)         │
+│  GET /health · POST /dashboard/guest-token      │
+│  structured JSON logging · request-ID           │
+└────────────────┬────────────────────────────────┘
                  │
                  ▼
-       ┌──────────────────┐
-       │   Redis Cache    │  ← normalized question hash
-       │   (TTL: 1 hour)  │  ← cache hit → skip LLM entirely
-       └────────┬─────────┘
-                │ miss
-                ▼
 ┌────────────────────────────────────────────────┐
 │              LangGraph Workflow                │
 │                                                │
-│  [Intent Classifier]                           │
-│          ↓                                     │
-│  [Schema Selector]  ←── dbt manifest.json      │
-│          ↓           (curated schema context)  │
-│  [SQL Generator]    ←── LangChain prompt       │
-│          ↓                                     │
-│  [SQL Validator]    ←── 3-layer validation     │
+│  [SQL Generator]    ←── dbt manifest.json      │
+│          ↓           (curated schema context   │
+│          ↓            + prompt from YAML)      │
+│  [SQL Validator]    ←── 3-layer AST validation │
 │       ↙      ↘                                 │
-│    valid   invalid ──→ retry (max 2)           │
-│       ↓                                        │
+│    valid   invalid ──→ back to generator       │
+│       ↓                 (max 2 retries, then   │
+│       ↓                  [Error Handler])      │
 │  [SQL Executor]     ←── analyst_ro role        │
 │          ↓           (read-only, 500 row cap)  │
+│       ↙      ↘                                 │
+│     ok      failed ──→ [Error Handler]         │
+│       ↓                                        │
 │  [Result Formatter] ──→ SQL + rows + NL text   │
 └────────────────────────────────────────────────┘
                  │
@@ -83,6 +79,10 @@ User question (natural language)
 │  analyst_ro: SELECT only · no DDL/DML         │
 └────────────────────────────────────────────────┘
 ```
+
+Every node emits an SSE event on `/query/stream`, so the client watches the SQL
+get generated, rejected, self-corrected and executed in real time rather than
+waiting on a single blocking response.
 
 
 ## Three Layers, One Platform
@@ -106,11 +106,10 @@ dbt is the heart. Both the BI layer and the AI layer consume the same mart model
 | Data Modeling | dbt Core 1.9+, dbt-postgres |
 | SQL Validation | sqlglot (AST-level parsing) |
 | Database | PostgreSQL 17 |
-| Cache | Redis |
 | Observability | Langfuse, structured JSON logging |
-| BI | Apache Superset (dashboard mart layer) |
+| BI | Apache Superset (dashboard mart layer, embedded via guest token) |
 | Infra | Docker Compose, uv, multi-stage Dockerfile |
-| UI | Streamlit |
+| UI | Streamlit (SSE console) |
 | Quality | mypy (strict), ruff, pytest |
 
 
@@ -156,7 +155,9 @@ A native dashboard export is committed under `infra/superset/assets/dashboards/`
 
 ## AI Interface (NL2SQL)
 
-Natural language questions flow through a LangGraph workflow: intent classification → schema selection from dbt manifest → SQL generation → validation → execution → result formatting. The LangGraph retry loop feeds validation errors back to the SQL generator (max 2 retries) before returning a graceful error.
+Natural language questions flow through a LangGraph workflow: SQL generation → validation → execution → result formatting, with a dedicated error handler as the terminal path for anything that fails. Schema context is not a separate node — the generator node pulls a curated view of the dbt manifest (only `ai`-tagged marts, with column descriptions and `meta.filterable` hints) straight into its prompt, so the model never sees a raw `INFORMATION_SCHEMA` dump.
+
+The retry loop is a conditional edge, not a wrapper: a rejected query routes back to the SQL generator with the validator's structured error attached, up to 2 retries, then falls through to the error handler for a graceful response.
 
 ### SQL Validation (3-Layer Defense)
 
@@ -170,6 +171,25 @@ The validator runs before any query reaches PostgreSQL, using sqlglot to parse S
 
 On failure, a structured error message feeds back to the SQL generator node (max 2 retries before graceful error).
 
+
+## The Console (Streamlit)
+
+A thin HTTP client over the API — all logic stays server-side. Two tabs:
+
+**Copilot** — ask a question, watch the pipeline work. Because the UI consumes
+`/query/stream`, each node reports as it happens: *"Generating SQL — attempt 1"*,
+*"↩ Rejected: unknown column — retrying"*, *"Executed ✓ — 42 rows"*. When the run
+finishes, a persistent panel keeps the generated SQL, the model's rationale for
+writing it that way, the self-correction count, and the row count on screen.
+Results render as a table plus an optional bar/line chart when the shape is a
+clear label + measure.
+
+**Dashboard** — the same dbt marts as a governed Superset dashboard, embedded
+with a short-lived guest token minted server-side (`POST /dashboard/guest-token`)
+and scoped to the read-only `Embedded_Guest` role. No admin surface, no edit.
+
+The self-correction trace is the point: a failed validation is not hidden, it is
+the part of the run worth showing.
 
 ## Security Model
 
@@ -200,13 +220,16 @@ Every workflow run is traced in [Langfuse](https://langfuse.com/) — LLM calls,
 | Phase | Status | Description |
 |---|---|---|
 | Data Foundation | ✅ Done | PostgreSQL 17, auto-seeded Olist sample, `analyst_ro` + `superset_ro` roles |
-| Docker Pipeline | ✅ Done | `docker compose up` chains seed → dbt build → API; Superset dashboard auto-import |
-| dbt Modeling | ✅ Done | 14 models across staging → intermediate → marts |
-| Query Engine | ✅ Done | SQL executor, manifest parser, 3-layer validator |
-| LangGraph Workflow | 🔨 In Progress | Intent classifier, schema selector, SQL generator, retry loop |
-| FastAPI Endpoints | ⏳ Upcoming | `POST /query`, `GET /schema`, `GET /history` |
-| Redis Cache | ⏳ Upcoming | Query hash cache, TTL 1 hour |
-| Streamlit UI + Polish | ⏳ Upcoming | Demo interface, `make demo` one-command setup |
+| Docker Pipeline | ✅ Done | `make up` chains seed → dbt build → API; Superset dashboard auto-import |
+| dbt Modeling | ✅ Done | 26 models: 7 staging → 2 intermediate → 17 marts (ai / core / dashboard) |
+| Query Engine | ✅ Done | SQL executor, manifest parser, 3-layer AST validator |
+| LangGraph Workflow | ✅ Done | Generator → validator → executor → formatter, conditional retry + error handler |
+| FastAPI Endpoints | ✅ Done | `POST /query`, `POST /query/stream` (SSE), `GET /health`, `POST /dashboard/guest-token` |
+| Streamlit Console | ✅ Done | Streaming pipeline trace, generated SQL + rationale, results table + chart |
+| Superset Embedding | ✅ Done | Guest-token embedding scoped to the read-only `Embedded_Guest` role |
+| Observability | ✅ Done | Langfuse tracing, structured JSON logging with request-ID correlation |
+| Query Cache | ⏳ Planned | Hash the normalized question, skip the LLM on a hit — not built yet |
+| Dataset Bootstrap | ⏳ Planned | Script the full Kaggle download; today the committed sample covers `make up` |
 
 
 ## Quick Start
@@ -219,12 +242,22 @@ cd analytics-copilot
 
 cp .env.example .env          # optional: add your OpenAI API key for the AI copilot
 
-make up                       # core: Postgres → seed sample → dbt build → API (:8090)
+make up                       # core: Postgres → seed sample → dbt build → API + console
 ```
 
 That single command bootstraps a **populated** warehouse: a committed, FK-consistent
 Olist sample (~15k orders) seeds automatically, then dbt builds every mart — no Kaggle
 download needed. The seed is idempotent, so re-running `make up` never clobbers data.
+
+| Service | URL |
+|---|---|
+| Streamlit console | http://localhost:8502 |
+| API + OpenAPI docs | http://localhost:8090/docs |
+| Superset (with `make up-dashboard`) | http://localhost:8088 |
+| Langfuse (with `make up-observability`) | http://localhost:3000 |
+
+The console's **Dashboard** tab needs Superset, so start with `make up-dashboard`
+if you want the embedded BI view; the **Copilot** tab works on core alone.
 
 **Optional stacks** (opt-in via Compose profiles, kept out of the default to stay light):
 
@@ -285,10 +318,13 @@ src/analytics_copilot/
 │   └── sql_executor.py       # Async PostgreSQL executor (read-only)
 └── workflow/                 # LangGraph graph + nodes
 
+streamlit/
+└── app.py                    # SSE console — pure HTTP client, no business logic
+
 dbt/
 ├── models/staging/           # 7 source-aligned views
 ├── models/intermediate/      # 2 business-logic views
-└── models/marts/             # 14 analytics-ready tables (ai / core / dashboard)
+└── models/marts/             # 17 analytics-ready tables (ai / core / dashboard)
 
 infra/
 ├── postgres/init.sql         # Schema DDL + role-based access control
@@ -302,8 +338,9 @@ scripts/
 └── load_olist.py             # Seed raw.* from the sample (or full dataset)
 
 tests/
-├── unit/services/            # SQL validator, executor, manifest parser
-└── test_documents.py         # Document upload/CRUD integration tests
+├── unit/services/            # SQL validator, executor, manifest parser, Superset
+├── unit/workflow/            # Each node, the compiled graph, SSE streaming
+└── *.py                      # API (health, query), logging, tracing
 ```
 
 
